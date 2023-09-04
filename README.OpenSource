@@ -1,8 +1,8 @@
 [
     {
         "Name": "chromium_third_party_pdfium",                   # 上游开源软件名全称
-        "License": "Libpng" ,"libtif","FTL","OFL-1.1-no-RFN","Copyright","Michael Foord","Sam Leffler","Greg Ward Larson"        # 上游开源软件中包含的许可证信息
-        "License File":"Greg Ward Larson"  ,"Sam Leffler" ,"Michael Foord","Copyright"    # 许可证所在文件路径
+        "License":"Khronos License" ,"GPL-2.0-with-bison-exception","GPL-3.0+",,"Khronos Group License", "Libpng" ,"libtif","FTL","OFL-1.1-no-RFN","Copyright","Michael Foord","Sam Leffler","Greg Ward Larson"        # 上游开源软件中包含的许可证信息
+        "License File":"LICENSE"    # 许可证所在文件路径
         "Version Number": "e08973f07eac840c09b8bfa7a75d2df56d015d88",
         "Upstream URL": "https://chromium.googlesource.com/pdfium.git@e08973f07eac840c09b8bfa7a75d2df56d015d88",   # 上游软件包发布地址
         "Description": "PDF 渲染引擎"           # 开源软件功能描述
