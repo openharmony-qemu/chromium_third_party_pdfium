@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <oatconfig>
+        <policylist>
+            <policy name="projectPolicy" desc="">
+                <policyitem type="compatibility" name="Khronos License" path="SPIRV.*" desc="" />
+                <policyitem type="compatibility" name="GPL-2.0-with-bison-exception" path=".*" desc="" />
+                <policyitem type="compatibility" name="GPL-3.0+" path=".*" desc="" />
+                <policyitem type="compatibility" name="Khronos Group License" path="glslang/MachineIndependent.*" desc="" />
+                <policyitem type="compatibility" name="Libpng" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="libtif" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="FTL" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="OFL-1.1-no-RFN" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="Copyright" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="Michael Foord" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="Sam Leffler" path="third_party.*" desc="" />
+                <policyitem type="compatibility" name="Greg Ward Larson" path="third_party.*" desc="" />
+            </policy>
+        </policylist>
+        <filefilterlist>
+            <filefilter name="defaultPolicyFilter"
+                desc="Filters for compatibility,license header policies">
+                <filteritem type="filepath" name="third_party/llvm-10.0/llvm/include/llvm/Support/LICENSE.TXT"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/SPIRV-Tools/BUILD.bazel"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/llvm-subzero/LICENSE.TXT"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/subzero/LICENSE.TXT"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/subzero/bloat/README.chromium"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/llvm-10.0/Android.bp"
+                    desc="" />
+                <filteritem type="filepath" name="third_party/SPIRV-Headers/BUILD.bazel"
+                    desc="" />
+                <filteritem type="filepath" name="README.OpenSource"
+                    desc="" />
+                <filteritem type="filepath" name=".*pdfiu"
+                    desc="" />
+                <filteritem type="filepath" name=".*pdfium"
+                    desc="" />
+                <filteritem type="filepath" name=".*chromium"
+                    desc="" />
+            </filefilter>
+            <filefilter name="defaultFilter">
+                <filteritem type="filepath" name="README.OpenSource"
+                    desc="" />
+            </filefilter> 
+        </filefilterlist>
+        <licensematcherlist>
+            <licensematcher name="Copyright" desc="">
+                <licensetext name="
+                  Copyright (C) 2002-2005 Maxim Shemanarev
+            " desc="" />
+            </licensematcher>
+            <licensematcher name="Michael Foord" desc="">
+                <licensetext name="
+                # Copyright (C) 2007-2012 Michael Foord
+            " desc="" />
+            </licensematcher> 
+            <licensematcher name="Sam Leffler" desc="">
+                <licensetext name="
+                * Copyright (c) 1996-1997 
+            " desc="" />
+            </licensematcher>  
+            <licensematcher name="Greg Ward Larson" desc="">
+                <licensetext name="
+                * Copyright (c) 1997 Greg Ward Larson 
+            " desc="" />
+            </licensematcher> 
+        </licensematcherlist>
+    </oatconfig>
+</configuration>
