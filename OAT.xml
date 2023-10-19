@@ -110,6 +110,15 @@ used to filter file path.
                 * advertising or publicity relating to the software without the specific,
                 * prior written permission of Sam Leffler, Greg Larson and Silicon Graphics.
             " desc="" />
+                <licensetext name="
+                * Permission to use, copy, modify, distribute, and sell this software and 
+                * its documentation for any purpose is hereby granted without fee, provided
+                * that (i) the above copyright notices and this permission notice appear in
+                * all copies of the software and related documentation, and (ii) the names of
+                * Pixar, Sam Leffler and Silicon Graphics may not be used in any advertising or
+                * publicity relating to the software without the specific, prior written
+                * permission of Pixar, Sam Leffler and Silicon Graphics.
+            " desc="" />
             </licensematcher>
             <licensematcher name="BSD-3-Clause" desc="">
                 <licensetext name="
@@ -123,17 +132,6 @@ used to filter file path.
                 Python mock library, currently used by native_client_sdk.  This is the
                 same mock library that is now part of python 3.3 where it is know as
                 unittest.mock..
-            " desc="" />
-            </licensematcher>
-            <licensematcher name="libtiff" desc="">
-                <licensetext name="
-                * Permission to use, copy, modify, distribute, and sell this software and 
-                * its documentation for any purpose is hereby granted without fee, provided
-                * that (i) the above copyright notices and this permission notice appear in
-                * all copies of the software and related documentation, and (ii) the names of
-                * Pixar, Sam Leffler and Silicon Graphics may not be used in any advertising or
-                * publicity relating to the software without the specific, prior written
-                * permission of Pixar, Sam Leffler and Silicon Graphics.
             " desc="" />
             </licensematcher>
         </licensematcherlist>

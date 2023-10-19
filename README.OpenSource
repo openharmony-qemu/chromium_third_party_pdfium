@@ -7,14 +7,5 @@
         "Owner": "huangjiewen2@huawei.com",
         "Upstream URL": "https://chromium.googlesource.com/pdfium.git@e08973f07eac840c09b8bfa7a75d2df56d015d88",
         "Description": "PDF 渲染引擎"
-    },
-    {
-        "Name": "pdfium",
-        "License":"Libpng",
-        "License File":"LICENSE",
-        "Version Number": "e08973f07eac840c09b8bfa7a75d2df56d015d88",
-        "Owner": "huangjiewen2@huawei.com",
-        "Upstream URL": "https://chromium.googlesource.com/pdfium.git@e08973f07eac840c09b8bfa7a75d2df56d015d88",
-        "Description": "PDF 渲染引擎"
     }
 ]
