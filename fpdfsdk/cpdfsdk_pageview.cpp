@@ -461,7 +461,7 @@ void CPDFSDK_PageView::EnterWidget(CPDFSDK_AnnotHandlerMgr* pAnnotHandlerMgr,
                                    ObservedPtr<CPDFSDK_Annot>& pAnnot,
                                    Mask<FWL_EVENTFLAG> nFlag) {
   m_bOnWidget = true;
-  m_pCaptureWidget.Reset(pAnnot.Get());
+  m_pCaptureWidget = pAnnot;
   pAnnotHandlerMgr->Annot_OnMouseEnter(pAnnot, nFlag);
 }
 
