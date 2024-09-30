@@ -54,6 +54,7 @@ CPDF_Form* AnnotGetMatrix(CPDF_Page* pPage,
       form_matrix.TransformRect(pForm->GetDict()->GetRectFor("BBox"));
   matrix->MatchRect(pAnnot->GetRect(), form_bbox);
 
+#if !BUILDFLAG(IS_OHOS)
   // Compensate for page rotation.
   if ((pAnnot->GetFlags() & pdfium::annotation_flags::kNoRotate) &&
       pPage->GetPageRotation() != 0) {
@@ -67,6 +68,7 @@ CPDF_Form* AnnotGetMatrix(CPDF_Page* pPage,
     matrix->Rotate(angle);
     matrix->Concat({1, 0, 0, 1, offset_x, offset_y});
   }
+#endif
 
   matrix->Concat(mtUser2Device);
   return pForm;
