@@ -130,9 +130,12 @@ void TIFFCleanup(TIFF *tif)
 
 void TIFFClose(TIFF *tif)
 {
-    TIFFCloseProc closeproc = tif->tif_closeproc;
-    thandle_t fd = tif->tif_clientdata;
+    if (tif != NULL)
+    {
+        TIFFCloseProc closeproc = tif->tif_closeproc;
+        thandle_t fd = tif->tif_clientdata;
 
-    TIFFCleanup(tif);
-    (void)(*closeproc)(fd);
+        TIFFCleanup(tif);
+        (void)(*closeproc)(fd);
+    }
 }
