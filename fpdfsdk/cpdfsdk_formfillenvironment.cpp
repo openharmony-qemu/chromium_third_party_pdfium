@@ -407,7 +407,6 @@ void CPDFSDK_FormFillEnvironment::OnCalculate(
 void CPDFSDK_FormFillEnvironment::OnFormat(ObservedPtr<CPDFSDK_Annot>& pAnnot) {
   CPDFSDK_Widget* pWidget = ToCPDFSDKWidget(pAnnot.Get());
   DCHECK(pWidget);
-
   absl::optional<WideString> sValue =
       m_pInteractiveForm->OnFormat(pWidget->GetFormField());
   if (!pAnnot)
