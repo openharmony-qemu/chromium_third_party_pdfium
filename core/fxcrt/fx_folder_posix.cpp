@@ -57,10 +57,15 @@ bool FX_PosixFolder::GetNextFile(ByteString* filename, bool* bFolder) {
 
   ByteString fullpath = m_Path + "/" + de->d_name;
   struct stat deStat;
-  if (stat(fullpath.c_str(), &deStat) < 0)
+  ByteString file = de->d_name;
+  if (
+#if BUILDFLAG(IS_OHOS)
+    !(file == "." || file == "..") &&
+#endif
+      stat(fullpath.c_str(), &deStat) < 0)
     return false;
 
-  *filename = de->d_name;
+  *filename = file;
   *bFolder = S_ISDIR(deStat.st_mode);
   return true;
 }
