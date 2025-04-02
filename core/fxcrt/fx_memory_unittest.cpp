@@ -5,9 +5,15 @@
 #include "core/fxcrt/fx_memory.h"
 
 #include <limits>
+#include <memory>
 
 #include "build/build_config.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+#if defined(PDF_USE_PARTITION_ALLOC)
+#include "partition_alloc/partition_address_space.h"
+#endif
 
 namespace {
 
@@ -21,7 +27,7 @@ constexpr size_t kCloseToMaxByteAlloc = kMaxByteAlloc - 100;
 
 }  // namespace
 
-TEST(fxcrt, FX_AllocZero) {
+TEST(fxcrt, FXAllocZero) {
   uint8_t* ptr = FX_Alloc(uint8_t, 0);
   uint8_t* ptr2 = FX_Alloc(uint8_t, 0);
   EXPECT_TRUE(ptr);      // Malloc(0) is distinguishable from OOM.
@@ -40,7 +46,7 @@ TEST(fxcrt, FXAllocOOM) {
   FX_Free(ptr);
 }
 
-TEST(fxcrt, FX_AllocOverflow) {
+TEST(fxcrt, FXAllocOverflow) {
   // |ptr| needs to be defined and used to avoid Clang optimizes away the
   // FX_Alloc() statement overzealously for optimized builds.
   int* ptr = nullptr;
@@ -52,7 +58,7 @@ TEST(fxcrt, FX_AllocOverflow) {
   FX_Free(ptr);
 }
 
-TEST(fxcrt, FX_AllocOverflow2D) {
+TEST(fxcrt, FXAllocOverflow2D) {
   // |ptr| needs to be defined and used to avoid Clang optimizes away the
   // FX_Alloc() statement overzealously for optimized builds.
   int* ptr = nullptr;
@@ -70,8 +76,23 @@ TEST(fxcrt, FXTryAllocOOM) {
   FX_Free(ptr);
 }
 
+TEST(fxcrt, FXTryAllocUninit) {
+  int* ptr = FX_TryAllocUninit(int, 4);
+  EXPECT_TRUE(ptr);
+  FX_Free(ptr);
+
+  ptr = FX_TryAllocUninit2D(int, 4, 4);
+  EXPECT_TRUE(ptr);
+  FX_Free(ptr);
+}
+
+TEST(fxcrt, FXTryAllocUninitOOM) {
+  EXPECT_FALSE(FX_TryAllocUninit(int, kCloseToMaxIntAlloc));
+  EXPECT_FALSE(FX_TryAllocUninit2D(int, kWidth, kOverflowIntAlloc2D));
+}
+
 #if !defined(COMPILER_GCC)
-TEST(fxcrt, FX_TryAllocOverflow) {
+TEST(fxcrt, FXTryAllocOverflow) {
   // |ptr| needs to be defined and used to avoid Clang optimizes away the
   // calloc() statement overzealously for optimized builds.
   int* ptr = (int*)calloc(sizeof(int), kOverflowIntAlloc);
@@ -98,8 +119,10 @@ TEST(fxcrt, FXMEMDefaultOOM) {
 TEST(fxcrt, AllocZeroesMemory) {
   uint8_t* ptr = FX_Alloc(uint8_t, 32);
   ASSERT_TRUE(ptr);
-  for (size_t i = 0; i < 32; ++i)
-    EXPECT_EQ(0, ptr[i]);
+  for (size_t i = 0; i < 32; ++i) {
+    // SAFETY: required for testing, length and loop bounds 32.
+    EXPECT_EQ(0, UNSAFE_BUFFERS(ptr[i]));
+  }
   FX_Free(ptr);
 }
 
@@ -125,3 +148,40 @@ TEST(fxcrt, FXAlign) {
   EXPECT_EQ(512, FxAlignToBoundary<512>(i512));
   EXPECT_EQ(-512, FxAlignToBoundary<512>(ineg));
 }
+
+#if defined(PDF_USE_PARTITION_ALLOC)
+#if PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC) && \
+    PA_BUILDFLAG(HAS_64_BIT_POINTERS)
+TEST(FxMemory, NewOperatorResultIsPA) {
+  auto obj = std::make_unique<double>(4.0);
+  EXPECT_TRUE(partition_alloc::IsManagedByPartitionAlloc(
+      reinterpret_cast<uintptr_t>(obj.get())));
+#if PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+  EXPECT_TRUE(partition_alloc::IsManagedByPartitionAllocBRPPool(
+      reinterpret_cast<uintptr_t>(obj.get())));
+#endif  // PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+}
+
+TEST(FxMemory, MallocResultIsPA) {
+  void* obj = malloc(16);
+  EXPECT_TRUE(partition_alloc::IsManagedByPartitionAlloc(
+      reinterpret_cast<uintptr_t>(obj)));
+#if PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+  EXPECT_TRUE(partition_alloc::IsManagedByPartitionAllocBRPPool(
+      reinterpret_cast<uintptr_t>(obj)));
+#endif  // PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+  free(obj);
+}
+
+TEST(FxMemory, StackObjectIsNotPA) {
+  int x = 3;
+  EXPECT_FALSE(partition_alloc::IsManagedByPartitionAlloc(
+      reinterpret_cast<uintptr_t>(&x)));
+#if PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+  EXPECT_FALSE(partition_alloc::IsManagedByPartitionAllocBRPPool(
+      reinterpret_cast<uintptr_t>(&x)));
+#endif  // PA_BUILDFLAG(ENABLE_BACKUP_REF_PTR_SUPPORT)
+}
+#endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC) &&
+        // PA_BUILDFLAG(HAS_64_BIT_POINTERS)
+#endif  // defined(PDF_USE_PARTITION_ALLOC)

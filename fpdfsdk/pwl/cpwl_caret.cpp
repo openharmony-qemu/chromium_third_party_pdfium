@@ -48,7 +48,7 @@ void CPWL_Caret::DrawThisAppearance(CFX_RenderDevice* pDevice,
                    CFX_Path::Point::Type::kLine);
 
   CFX_GraphStateData gsd;
-  gsd.m_LineWidth = m_fWidth;
+  gsd.set_line_width(m_fWidth);
   pDevice->DrawPath(path, &mtUser2Device, &gsd, 0, ArgbEncode(255, 0, 0, 0),
                     CFX_FillRenderOptions::EvenOddOptions());
 }
@@ -76,7 +76,7 @@ void CPWL_Caret::SetCaret(bool bVisible,
       return;
 
     m_pTimer.reset();
-    CPWL_Wnd::SetVisible(false);
+    (void)CPWL_Wnd::SetVisible(false);
     // Note, |this| may no longer be viable at this point. If more work needs
     // to be done, check the return value of SetVisible().
     return;

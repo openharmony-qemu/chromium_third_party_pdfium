@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "core/fxcrt/check_op.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/css/cfx_cssstyleselector.h"
 #include "core/fxcrt/css/cfx_cssvaluelistparser.h"
 #include "core/fxcrt/fx_codepage.h"
@@ -18,37 +20,37 @@ namespace {
 
 #undef CSS_PROP____
 #define CSS_PROP____(a, b, c, d) {CFX_CSSProperty::a, c, d},
-const CFX_CSSData::Property propertyTable[] = {
+const CFX_CSSData::Property kPropertyTable[] = {
 #include "core/fxcrt/css/properties.inc"
 };
 #undef CSS_PROP____
 
 #undef CSS_PROP_VALUE____
 #define CSS_PROP_VALUE____(a, b, c) {CFX_CSSPropertyValue::a, c},
-const CFX_CSSData::PropertyValue propertyValueTable[] = {
+const CFX_CSSData::PropertyValue kPropertyValueTable[] = {
 #include "core/fxcrt/css/property_values.inc"
 };
 #undef CSS_PROP_VALUE____
 
-const CFX_CSSData::LengthUnit lengthUnitTable[] = {
-    {L"cm", CFX_CSSNumberValue::Unit::kCentiMeters},
-    {L"em", CFX_CSSNumberValue::Unit::kEMS},
-    {L"ex", CFX_CSSNumberValue::Unit::kEXS},
-    {L"in", CFX_CSSNumberValue::Unit::kInches},
-    {L"mm", CFX_CSSNumberValue::Unit::kMilliMeters},
-    {L"pc", CFX_CSSNumberValue::Unit::kPicas},
-    {L"pt", CFX_CSSNumberValue::Unit::kPoints},
-    {L"px", CFX_CSSNumberValue::Unit::kPixels},
+const CFX_CSSData::LengthUnit kLengthUnitTable[] = {
+    {"cm", CFX_CSSNumber::Unit::kCentiMeters},
+    {"em", CFX_CSSNumber::Unit::kEMS},
+    {"ex", CFX_CSSNumber::Unit::kEXS},
+    {"in", CFX_CSSNumber::Unit::kInches},
+    {"mm", CFX_CSSNumber::Unit::kMilliMeters},
+    {"pc", CFX_CSSNumber::Unit::kPicas},
+    {"pt", CFX_CSSNumber::Unit::kPoints},
+    {"px", CFX_CSSNumber::Unit::kPixels},
 };
 
 // 16 colours from CSS 2.0 + alternate spelling of grey/gray.
-const CFX_CSSData::Color colorTable[] = {
-    {L"aqua", 0xff00ffff},    {L"black", 0xff000000}, {L"blue", 0xff0000ff},
-    {L"fuchsia", 0xffff00ff}, {L"gray", 0xff808080},  {L"green", 0xff008000},
-    {L"grey", 0xff808080},    {L"lime", 0xff00ff00},  {L"maroon", 0xff800000},
-    {L"navy", 0xff000080},    {L"olive", 0xff808000}, {L"orange", 0xffffa500},
-    {L"purple", 0xff800080},  {L"red", 0xffff0000},   {L"silver", 0xffc0c0c0},
-    {L"teal", 0xff008080},    {L"white", 0xffffffff}, {L"yellow", 0xffffff00},
+const CFX_CSSData::Color kColorTable[] = {
+    {"aqua", 0xff00ffff},    {"black", 0xff000000}, {"blue", 0xff0000ff},
+    {"fuchsia", 0xffff00ff}, {"gray", 0xff808080},  {"green", 0xff008000},
+    {"grey", 0xff808080},    {"lime", 0xff00ff00},  {"maroon", 0xff800000},
+    {"navy", 0xff000080},    {"olive", 0xff808000}, {"orange", 0xffffa500},
+    {"purple", 0xff800080},  {"red", 0xffff0000},   {"silver", 0xffc0c0c0},
+    {"teal", 0xff008080},    {"white", 0xffffffff}, {"yellow", 0xffffff00},
 };
 
 }  // namespace
@@ -59,19 +61,24 @@ const CFX_CSSData::Property* CFX_CSSData::GetPropertyByName(
     return nullptr;
 
   uint32_t hash = FX_HashCode_GetLoweredW(name);
-  auto* result =
-      std::lower_bound(std::begin(propertyTable), std::end(propertyTable), hash,
-                       [](const CFX_CSSData::Property& iter,
-                          const uint32_t& hash) { return iter.dwHash < hash; });
+  auto* result = std::lower_bound(
+      std::begin(kPropertyTable), std::end(kPropertyTable), hash,
+      [](const CFX_CSSData::Property& iter, const uint32_t& hash) {
+        return iter.dwHash < hash;
+      });
 
-  if (result != std::end(propertyTable) && result->dwHash == hash)
+  if (result != std::end(kPropertyTable) && result->dwHash == hash) {
     return result;
+  }
   return nullptr;
 }
 
 const CFX_CSSData::Property* CFX_CSSData::GetPropertyByEnum(
     CFX_CSSProperty property) {
-  return &propertyTable[static_cast<uint8_t>(property)];
+  auto index = static_cast<size_t>(property);
+  CHECK_LT(index, std::size(kPropertyTable));
+  // SAFETY: CHECK() on previous line ensures index is in bounds.
+  return UNSAFE_BUFFERS(&kPropertyTable[index]);
 }
 
 const CFX_CSSData::PropertyValue* CFX_CSSData::GetPropertyValueByName(
@@ -81,44 +88,37 @@ const CFX_CSSData::PropertyValue* CFX_CSSData::GetPropertyValueByName(
 
   uint32_t hash = FX_HashCode_GetLoweredW(wsName);
   auto* result = std::lower_bound(
-      std::begin(propertyValueTable), std::end(propertyValueTable), hash,
+      std::begin(kPropertyValueTable), std::end(kPropertyValueTable), hash,
       [](const PropertyValue& iter, const uint32_t& hash) {
         return iter.dwHash < hash;
       });
 
-  if (result != std::end(propertyValueTable) && result->dwHash == hash)
+  if (result != std::end(kPropertyValueTable) && result->dwHash == hash) {
     return result;
+  }
   return nullptr;
 }
 
 const CFX_CSSData::LengthUnit* CFX_CSSData::GetLengthUnitByName(
     WideStringView wsName) {
-  if (wsName.IsEmpty() || wsName.GetLength() != 2)
+  if (wsName.IsEmpty() || wsName.GetLength() != 2) {
     return nullptr;
-
-  WideString lowerName = WideString(wsName);
-  lowerName.MakeLower();
-
-  for (auto* iter = std::begin(lengthUnitTable);
-       iter != std::end(lengthUnitTable); ++iter) {
-    if (lowerName == iter->value)
-      return iter;
   }
-
-  return nullptr;
+  auto* iter =
+      std::find_if(std::begin(kLengthUnitTable), std::end(kLengthUnitTable),
+                   [wsName](const CFX_CSSData::LengthUnit& unit) {
+                     return wsName.EqualsASCIINoCase(unit.value);
+                   });
+  return iter != std::end(kLengthUnitTable) ? iter : nullptr;
 }
 
 const CFX_CSSData::Color* CFX_CSSData::GetColorByName(WideStringView wsName) {
-  if (wsName.IsEmpty())
+  if (wsName.IsEmpty()) {
     return nullptr;
-
-  WideString lowerName = WideString(wsName);
-  lowerName.MakeLower();
-
-  for (auto* iter = std::begin(colorTable); iter != std::end(colorTable);
-       ++iter) {
-    if (lowerName == iter->name)
-      return iter;
   }
-  return nullptr;
+  auto* iter = std::find_if(std::begin(kColorTable), std::end(kColorTable),
+                            [wsName](const CFX_CSSData::Color& color) {
+                              return wsName.EqualsASCIINoCase(color.name);
+                            });
+  return iter != std::end(kColorTable) ? iter : nullptr;
 }

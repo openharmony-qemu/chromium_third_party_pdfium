@@ -18,17 +18,16 @@
 #include "core/fpdfapi/parser/cpdf_stream_acc.h"
 #include "core/fpdfapi/parser/cpdf_string.h"
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
+#include "core/fxcrt/check.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_stream.h"
-#include "third_party/base/check.h"
-#include "third_party/base/notreached.h"
 
 // Indexed by 8-bit character code, contains either:
 //   'W' - for whitespace: NUL, TAB, CR, LF, FF, SPACE, 0x80, 0xff
 //   'N' - for numeric: 0123456789+-.
 //   'D' - for delimiter: %()/<>[]{}
 //   'R' - otherwise.
-const char PDF_CharType[256] = {
+const char kPDFCharTypes[256] = {
     // NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL  BS   HT   LF   VT   FF   CR   SO
     // SI
     'W', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'W', 'W', 'R', 'W', 'W', 'R',
@@ -39,7 +38,7 @@ const char PDF_CharType[256] = {
     'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R',
     'R',
 
-    // SP    !    "    #    $    %    &    ´    (    )    *    +    ,    -    .
+    // SP    !    "    #    $    %    &    '    (    )    *    +    ,    -    .
     // /
     'W', 'R', 'R', 'R', 'R', 'D', 'R', 'R', 'D', 'D', 'R', 'N', 'R', 'N', 'N',
     'D',
@@ -75,18 +74,18 @@ const char PDF_CharType[256] = {
     'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R',
     'R', 'R', 'R', 'R', 'R', 'R', 'R', 'W'};
 
-absl::optional<FX_FILESIZE> GetHeaderOffset(
+std::optional<FX_FILESIZE> GetHeaderOffset(
     const RetainPtr<IFX_SeekableReadStream>& pFile) {
   static constexpr size_t kBufSize = 4;
   uint8_t buf[kBufSize];
   for (FX_FILESIZE offset = 0; offset <= 1024; ++offset) {
     if (!pFile->ReadBlockAtOffset(buf, offset))
-      return absl::nullopt;
+      return std::nullopt;
 
     if (memcmp(buf, "%PDF", 4) == 0)
       return offset;
   }
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 ByteString PDF_NameDecode(ByteStringView orig) {
@@ -111,12 +110,9 @@ ByteString PDF_NameDecode(ByteStringView orig) {
 }
 
 ByteString PDF_NameEncode(const ByteString& orig) {
-  const uint8_t* src_buf = reinterpret_cast<const uint8_t*>(orig.c_str());
-  int src_len = orig.GetLength();
-  int dest_len = 0;
-  int i;
-  for (i = 0; i < src_len; i++) {
-    uint8_t ch = src_buf[i];
+  pdfium::span<const uint8_t> src_span = orig.unsigned_span();
+  size_t dest_len = 0;
+  for (const auto ch : src_span) {
     if (ch >= 0x80 || PDFCharIsWhitespace(ch) || ch == '#' ||
         PDFCharIsDelimiter(ch)) {
       dest_len += 3;
@@ -124,16 +120,15 @@ ByteString PDF_NameEncode(const ByteString& orig) {
       dest_len++;
     }
   }
-  if (dest_len == src_len)
+  if (dest_len == src_span.size()) {
     return orig;
-
+  }
   ByteString res;
   {
     // Span's lifetime must end before ReleaseBuffer() below.
     pdfium::span<char> dest_buf = res.GetBuffer(dest_len);
     dest_len = 0;
-    for (i = 0; i < src_len; i++) {
-      uint8_t ch = src_buf[i];
+    for (const auto ch : src_span) {
       if (ch >= 0x80 || PDFCharIsWhitespace(ch) || ch == '#' ||
           PDFCharIsDelimiter(ch)) {
         dest_buf[dest_len++] = '#';
@@ -248,14 +243,11 @@ std::ostream& operator<<(std::ostream& buf, const CPDF_Object* pObj) {
       buf << p->GetDict().Get() << "stream\r\n";
       auto pAcc = pdfium::MakeRetain<CPDF_StreamAcc>(std::move(p));
       pAcc->LoadAllDataRaw();
-      pdfium::span<const uint8_t> span = pAcc->GetSpan();
-      buf.write(reinterpret_cast<const char*>(span.data()), span.size());
+      auto span = pdfium::as_chars(pAcc->GetSpan());
+      buf.write(span.data(), span.size());
       buf << "\r\nendstream";
       break;
     }
-    default:
-      NOTREACHED();
-      break;
   }
   return buf;
 }

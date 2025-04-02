@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#include "third_party/base/span.h"
+#include "core/fxcrt/span.h"
 
 class CPDF_Font;
 class TextCharPos;

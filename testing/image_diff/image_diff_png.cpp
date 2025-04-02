@@ -16,7 +16,9 @@
 
 #include <string>
 
-#include "third_party/base/notreached.h"
+#include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_memcpy_wrappers.h"
+#include "core/fxcrt/notreached.h"
 
 #ifdef USE_SYSTEM_ZLIB
 #include <zlib.h>
@@ -94,7 +96,7 @@ void ConvertRGBAtoRGB(const uint8_t* rgba,
   const uint8_t* pixel_in = rgba;
   uint8_t* pixel_out = rgb;
   for (int x = 0; x < pixel_width; x++) {
-    memcpy(pixel_out, pixel_in, 3);
+    FXSYS_memcpy(pixel_out, pixel_in, 3);
     pixel_in += 4;
     pixel_out += 3;
   }
@@ -150,7 +152,7 @@ void ConvertRGBtoRGBA(const uint8_t* rgb,
   const uint8_t* pixel_in = rgb;
   uint8_t* pixel_out = rgba;
   for (int x = 0; x < pixel_width; x++) {
-    memcpy(pixel_out, pixel_in, 3);
+    FXSYS_memcpy(pixel_out, pixel_in, 3);
     pixel_out[3] = 0xff;
     pixel_in += 3;
     pixel_out += 4;
@@ -253,8 +255,7 @@ void DecodeInfoCallback(png_struct* png_ptr, png_info* info_ptr) {
         state->output_channels = 1;
         break;
       default:
-        NOTREACHED();
-        break;
+        NOTREACHED_NORETURN();
     }
   } else if (channels == 4) {
     switch (state->output_format) {
@@ -271,12 +272,10 @@ void DecodeInfoCallback(png_struct* png_ptr, png_info* info_ptr) {
         state->output_channels = 4;
         break;
       default:
-        NOTREACHED();
-        break;
+        NOTREACHED_NORETURN();
     }
   } else {
-    NOTREACHED();
-    longjmp(png_jmpbuf(png_ptr), 1);
+    NOTREACHED_NORETURN();
   }
 
   state->output->resize(state->width * state->output_channels * state->height);
@@ -288,11 +287,7 @@ void DecodeRowCallback(png_struct* png_ptr,
                        int pass) {
   PngDecoderState* state =
       static_cast<PngDecoderState*>(png_get_progressive_ptr(png_ptr));
-
-  if (static_cast<int>(row_num) > state->height) {
-    NOTREACHED();
-    return;
-  }
+  CHECK_LE(static_cast<int>(row_num), state->height);
 
   uint8_t* base = nullptr;
   base = &state->output->front();
@@ -301,7 +296,7 @@ void DecodeRowCallback(png_struct* png_ptr,
   if (state->row_converter)
     state->row_converter(new_row, state->width, dest, &state->is_opaque);
   else
-    memcpy(dest, new_row, state->width * state->output_channels);
+    FXSYS_memcpy(dest, new_row, state->width * state->output_channels);
 }
 
 void DecodeEndCallback(png_struct* png_ptr, png_info* info) {
@@ -403,7 +398,7 @@ void EncoderWriteCallback(png_structp png, png_bytep data, png_size_t size) {
   PngEncoderState* state = static_cast<PngEncoderState*>(png_get_io_ptr(png));
   size_t old_size = state->out->size();
   state->out->resize(old_size + size);
-  memcpy(&(*state->out)[old_size], data, size);
+  FXSYS_memcpy(&(*state->out)[old_size], data, size);
 }
 
 void FakeFlushCallback(png_structp png) {
@@ -609,10 +604,6 @@ std::vector<uint8_t> EncodeWithCompressionLevel(
       output_color_components = 1;
       png_output_color_type = PNG_COLOR_TYPE_GRAY;
       break;
-
-    default:
-      NOTREACHED();
-      return output;
   }
 
   // Row stride should be at least as long as the length of the data.

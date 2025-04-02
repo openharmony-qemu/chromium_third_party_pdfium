@@ -47,6 +47,10 @@ void* Realloc(void* ptr, size_t num_members, size_t member_size) {
   return realloc(ptr, total.ValueOrDie());
 }
 
+void Dealloc(void* ptr) {
+  free(ptr);
+}
+
 void* StringAlloc(size_t num_members, size_t member_size) {
   FX_SAFE_SIZE_T total = member_size;
   total *= num_members;
@@ -55,10 +59,16 @@ void* StringAlloc(size_t num_members, size_t member_size) {
   return malloc(total.ValueOrDie());
 }
 
+void StringDealloc(void* ptr) {
+  free(ptr);
+}
+
 }  // namespace internal
 }  // namespace pdfium
 
 void FX_InitializeMemoryAllocators() {}
+
+void FX_DestroyMemoryAllocators() {}
 
 void* FX_ArrayBufferAllocate(size_t length) {
   void* result = calloc(length, 1);
@@ -76,8 +86,4 @@ void* FX_ArrayBufferAllocateUninitialized(size_t length) {
 
 void FX_ArrayBufferFree(void* data) {
   free(data);
-}
-
-void FX_Free(void* ptr) {
-  free(ptr);
 }

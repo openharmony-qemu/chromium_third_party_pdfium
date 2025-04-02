@@ -12,11 +12,11 @@
 #include <sstream>
 #include <utility>
 
+#include "core/fxcrt/check.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "fpdfsdk/pwl/cpwl_wnd.h"
-#include "third_party/base/check.h"
 
 namespace {
 
@@ -125,8 +125,9 @@ void CPWL_ScrollBar::OnDestroy() {
   CPWL_Wnd::OnDestroy();
 }
 
-bool CPWL_ScrollBar::RePosChildWnd() {
-  CFX_FloatRect rcClient = GetClientRect();
+bool CPWL_ScrollBar::RepositionChildWnd() {
+  ObservedPtr<CPWL_ScrollBar> this_observed(this);
+  CFX_FloatRect rcClient = this_observed->GetClientRect();
   CFX_FloatRect rcMinButton;
   CFX_FloatRect rcMaxButton;
   if (FXSYS_IsFloatBigger(rcClient.top - rcClient.bottom,
@@ -144,24 +145,24 @@ bool CPWL_ScrollBar::RePosChildWnd() {
       rcMaxButton = CFX_FloatRect(rcClient.left, rcClient.bottom,
                                   rcClient.right, rcClient.bottom + fBWidth);
     } else {
-      if (!SetVisible(false))
+      if (!this_observed->SetVisible(false)) {
         return false;
+      }
     }
   }
-
-  ObservedPtr<CPWL_ScrollBar> thisObserved(this);
-  if (m_pMinButton) {
-    m_pMinButton->Move(rcMinButton, true, false);
-    if (!thisObserved)
+  if (this_observed->m_pMinButton) {
+    this_observed->m_pMinButton->Move(rcMinButton, true, false);
+    if (!this_observed) {
       return false;
+    }
   }
-  if (m_pMaxButton) {
-    m_pMaxButton->Move(rcMaxButton, true, false);
-    if (!thisObserved)
+  if (this_observed->m_pMaxButton) {
+    this_observed->m_pMaxButton->Move(rcMaxButton, true, false);
+    if (!this_observed) {
       return false;
+    }
   }
-
-  return MovePosButton(false);
+  return this_observed->MovePosButton(false);
 }
 
 void CPWL_ScrollBar::DrawThisAppearance(CFX_RenderDevice* pDevice,
@@ -288,35 +289,37 @@ void CPWL_ScrollBar::NotifyMouseMove(CPWL_Wnd* child, const CFX_PointF& pos) {
 }
 
 void CPWL_ScrollBar::CreateButtons(const CreateParams& cp) {
+  ObservedPtr<CPWL_ScrollBar> this_observed(this);
+
   CreateParams scp = cp;
   scp.dwBorderWidth = 2;
   scp.nBorderStyle = BorderStyle::kBeveled;
   scp.dwFlags = PWS_VISIBLE | PWS_BORDER | PWS_BACKGROUND | PWS_NOREFRESHCLIP;
 
-  if (!m_pMinButton) {
-    auto pButton = std::make_unique<CPWL_SBButton>(
-        scp, CloneAttachedData(), CPWL_SBButton::Type::kMinButton);
-    m_pMinButton = pButton.get();
-    AddChild(std::move(pButton));
-    m_pMinButton->Realize();
+  if (!this_observed->m_pMinButton) {
+    auto pButton =
+        std::make_unique<CPWL_SBButton>(scp, this_observed->CloneAttachedData(),
+                                        CPWL_SBButton::Type::kMinButton);
+    this_observed->m_pMinButton = pButton.get();
+    this_observed->AddChild(std::move(pButton));
+    this_observed->m_pMinButton->Realize();
   }
-
-  if (!m_pMaxButton) {
-    auto pButton = std::make_unique<CPWL_SBButton>(
-        scp, CloneAttachedData(), CPWL_SBButton::Type::kMaxButton);
-    m_pMaxButton = pButton.get();
-    AddChild(std::move(pButton));
-    m_pMaxButton->Realize();
+  if (!this_observed->m_pMaxButton) {
+    auto pButton =
+        std::make_unique<CPWL_SBButton>(scp, this_observed->CloneAttachedData(),
+                                        CPWL_SBButton::Type::kMaxButton);
+    this_observed->m_pMaxButton = pButton.get();
+    this_observed->AddChild(std::move(pButton));
+    this_observed->m_pMaxButton->Realize();
   }
-
-  if (!m_pPosButton) {
-    auto pButton = std::make_unique<CPWL_SBButton>(
-        scp, CloneAttachedData(), CPWL_SBButton::Type::kPosButton);
-    m_pPosButton = pButton.get();
-    ObservedPtr<CPWL_ScrollBar> thisObserved(this);
-    if (m_pPosButton->SetVisible(false) && thisObserved) {
-      AddChild(std::move(pButton));
-      m_pPosButton->Realize();
+  if (!this_observed->m_pPosButton) {
+    auto pButton =
+        std::make_unique<CPWL_SBButton>(scp, this_observed->CloneAttachedData(),
+                                        CPWL_SBButton::Type::kPosButton);
+    this_observed->m_pPosButton = pButton.get();
+    if (this_observed->m_pPosButton->SetVisible(false) && this_observed) {
+      this_observed->AddChild(std::move(pButton));
+      this_observed->m_pPosButton->Realize();
     }
   }
 }
@@ -328,24 +331,26 @@ float CPWL_ScrollBar::GetScrollBarWidth() const {
 void CPWL_ScrollBar::SetScrollRange(float fMin,
                                     float fMax,
                                     float fClientWidth) {
-  if (!m_pPosButton)
+  ObservedPtr<CPWL_ScrollBar> this_observed(this);
+  if (!this_observed->m_pPosButton) {
     return;
+  }
+  this_observed->m_sData.SetScrollRange(fMin, fMax);
+  this_observed->m_sData.SetClientWidth(fClientWidth);
 
-  ObservedPtr<CPWL_ScrollBar> thisObserved(this);
-  m_sData.SetScrollRange(fMin, fMax);
-  m_sData.SetClientWidth(fClientWidth);
-
-  if (FXSYS_IsFloatSmaller(m_sData.ScrollRange.GetWidth(), 0.0f)) {
-    m_pPosButton->SetVisible(false);
+  if (FXSYS_IsFloatSmaller(this_observed->m_sData.ScrollRange.GetWidth(),
+                           0.0f)) {
+    (void)this_observed->m_pPosButton->SetVisible(false);
     // Note, |this| may no longer be viable at this point. If more work needs
-    // to be done, check thisObserved.
+    // to be done, check this_observed.
     return;
   }
 
-  if (!m_pPosButton->SetVisible(true) || !thisObserved)
+  if (!this_observed->m_pPosButton->SetVisible(true) || !this_observed) {
     return;
+  }
 
-  MovePosButton(true);
+  (void)this_observed->MovePosButton(true);
   // Note, |this| may no longer be viable at this point. If more work needs
   // to be done, check the return value of MovePosButton().
 }
@@ -354,7 +359,7 @@ void CPWL_ScrollBar::SetScrollPos(float fPos) {
   float fOldPos = m_sData.fScrollPos;
   m_sData.SetPos(fPos);
   if (!FXSYS_IsFloatEqual(m_sData.fScrollPos, fOldPos)) {
-    MovePosButton(true);
+    (void)MovePosButton(true);
     // Note, |this| may no longer be viable at this point. If more work needs
     // to be done, check the return value of MovePosButton().
   }
@@ -366,17 +371,19 @@ void CPWL_ScrollBar::SetScrollStep(float fBigStep, float fSmallStep) {
 }
 
 bool CPWL_ScrollBar::MovePosButton(bool bRefresh) {
+  ObservedPtr<CPWL_ScrollBar> this_observed(this);
+
   DCHECK(m_pMinButton);
   DCHECK(m_pMaxButton);
 
-  if (m_pPosButton->IsVisible()) {
-    CFX_FloatRect rcPosArea = GetScrollArea();
-    float fBottom = TrueToFace(m_sData.fScrollPos + m_sData.fClientWidth);
-    float fTop = TrueToFace(m_sData.fScrollPos);
-
-    if (FXSYS_IsFloatSmaller(fTop - fBottom, kPosButtonMinWidth))
+  if (this_observed->m_pPosButton->IsVisible()) {
+    CFX_FloatRect rcPosArea = this_observed->GetScrollArea();
+    float fTop = this_observed->TrueToFace(m_sData.fScrollPos);
+    float fBottom =
+        this_observed->TrueToFace(m_sData.fScrollPos + m_sData.fClientWidth);
+    if (FXSYS_IsFloatSmaller(fTop - fBottom, kPosButtonMinWidth)) {
       fBottom = fTop - kPosButtonMinWidth;
-
+    }
     if (FXSYS_IsFloatSmaller(fBottom, rcPosArea.bottom)) {
       fBottom = rcPosArea.bottom;
       fTop = fBottom + kPosButtonMinWidth;
@@ -385,12 +392,11 @@ bool CPWL_ScrollBar::MovePosButton(bool bRefresh) {
     CFX_FloatRect rcPosButton =
         CFX_FloatRect(rcPosArea.left, fBottom, rcPosArea.right, fTop);
 
-    ObservedPtr<CPWL_ScrollBar> thisObserved(this);
-    m_pPosButton->Move(rcPosButton, true, bRefresh);
-    if (!thisObserved)
+    this_observed->m_pPosButton->Move(rcPosButton, true, bRefresh);
+    if (!this_observed) {
       return false;
+    }
   }
-
   return true;
 }
 

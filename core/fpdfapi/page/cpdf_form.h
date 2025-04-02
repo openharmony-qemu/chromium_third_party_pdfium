@@ -24,6 +24,13 @@ class CPDF_Type3Char;
 class CPDF_Form final : public CPDF_PageObjectHolder,
                         public CPDF_Font::FormIface {
  public:
+  struct RecursionState {
+    RecursionState();
+    ~RecursionState();
+
+    std::set<const uint8_t*> parsed_set;
+  };
+
   // Helper method to choose the first non-null resources dictionary.
   static CPDF_Dictionary* ChooseResourcesDict(CPDF_Dictionary* pResources,
                                               CPDF_Dictionary* pParentResources,
@@ -42,13 +49,13 @@ class CPDF_Form final : public CPDF_PageObjectHolder,
   void ParseContentForType3Char(CPDF_Type3Char* pType3Char) override;
   bool HasPageObjects() const override;
   CFX_FloatRect CalcBoundingBox() const override;
-  absl::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
+  std::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
   GetBitmapAndMatrixFromSoleImageOfForm() const override;
 
   void ParseContent();
   void ParseContent(const CPDF_AllStates* pGraphicStates,
                     const CFX_Matrix* pParentMatrix,
-                    std::set<const uint8_t*>* pParsedSet);
+                    RecursionState* recursion_state);
 
   RetainPtr<const CPDF_Stream> GetStream() const;
 
@@ -56,9 +63,9 @@ class CPDF_Form final : public CPDF_PageObjectHolder,
   void ParseContentInternal(const CPDF_AllStates* pGraphicStates,
                             const CFX_Matrix* pParentMatrix,
                             CPDF_Type3Char* pType3Char,
-                            std::set<const uint8_t*>* pParsedSet);
+                            RecursionState* recursion_state);
 
-  std::set<const uint8_t*> m_ParsedSet;
+  RecursionState m_RecursionState;
   RetainPtr<CPDF_Stream> const m_pFormStream;
 };
 

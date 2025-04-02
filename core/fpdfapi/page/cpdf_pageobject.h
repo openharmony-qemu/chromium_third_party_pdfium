@@ -13,6 +13,7 @@
 #include "core/fpdfapi/page/cpdf_graphicstates.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/span.h"
 
 class CPDF_FormObject;
 class CPDF_ImageObject;
@@ -23,7 +24,7 @@ class CPDF_TextObject;
 // Represents an object within the page, like a form or image. Not to be
 // confused with the PDF spec's page object that lives in a page tree, which is
 // represented by CPDF_Page.
-class CPDF_PageObject : public CPDF_GraphicStates {
+class CPDF_PageObject {
  public:
   // Values must match corresponding values in //public.
   enum class Type {
@@ -39,7 +40,7 @@ class CPDF_PageObject : public CPDF_GraphicStates {
   explicit CPDF_PageObject(int32_t content_stream);
   CPDF_PageObject(const CPDF_PageObject& src) = delete;
   CPDF_PageObject& operator=(const CPDF_PageObject& src) = delete;
-  ~CPDF_PageObject() override;
+  virtual ~CPDF_PageObject();
 
   virtual Type GetType() const = 0;
   virtual void Transform(const CFX_Matrix& matrix) = 0;
@@ -61,8 +62,9 @@ class CPDF_PageObject : public CPDF_GraphicStates {
 
   void SetDirty(bool value) { m_bDirty = value; }
   bool IsDirty() const { return m_bDirty; }
+  void SetIsActive(bool value);
+  bool IsActive() const { return m_bIsActive; }
   void TransformClipPath(const CFX_Matrix& matrix);
-  void TransformGeneralState(const CFX_Matrix& matrix);
 
   void SetOriginalRect(const CFX_FloatRect& rect) { m_OriginalRect = rect; }
   const CFX_FloatRect& GetOriginalRect() const { return m_OriginalRect; }
@@ -94,24 +96,62 @@ class CPDF_PageObject : public CPDF_GraphicStates {
     m_ResourceName = resource_name;
   }
 
-  const ByteString& GetGraphicsResourceName() const {
-    return m_GraphicsResourceName;
+  pdfium::span<const ByteString> GetGraphicsResourceNames() const;
+
+  const CPDF_ClipPath& clip_path() const { return m_GraphicStates.clip_path(); }
+  CPDF_ClipPath& mutable_clip_path() {
+    return m_GraphicStates.mutable_clip_path();
   }
-  void SetGraphicsResourceName(const ByteString& resource_name) {
-    m_GraphicsResourceName = resource_name;
+
+  const CFX_GraphState& graph_state() const {
+    return m_GraphicStates.graph_state();
   }
+  CFX_GraphState& mutable_graph_state() {
+    return m_GraphicStates.mutable_graph_state();
+  }
+
+  const CPDF_ColorState& color_state() const {
+    return m_GraphicStates.color_state();
+  }
+  CPDF_ColorState& mutable_color_state() {
+    return m_GraphicStates.mutable_color_state();
+  }
+
+  const CPDF_TextState& text_state() const {
+    return m_GraphicStates.text_state();
+  }
+  CPDF_TextState& mutable_text_state() {
+    return m_GraphicStates.mutable_text_state();
+  }
+
+  const CPDF_GeneralState& general_state() const {
+    return m_GraphicStates.general_state();
+  }
+  CPDF_GeneralState& mutable_general_state() {
+    return m_GraphicStates.mutable_general_state();
+  }
+
+  const CPDF_GraphicStates& graphic_states() const { return m_GraphicStates; }
+
+  void SetDefaultStates();
 
  protected:
   void CopyData(const CPDF_PageObject* pSrcObject);
 
  private:
+  CPDF_GraphicStates m_GraphicStates;
   CFX_FloatRect m_Rect;
   CFX_FloatRect m_OriginalRect;
   CPDF_ContentMarks m_ContentMarks;
+  // Modifying `m_bIsActive` automatically set `m_bDirty` to be true, but
+  // otherwise `m_bDirty` and `m_bIsActive` are independent.  A
+  // `CPDF_PageObject` can remain dirty until page object processing completes
+  // and marks it no longer dirty.
   bool m_bDirty = false;
+  bool m_bIsActive = true;
   int32_t m_ContentStream;
-  ByteString m_ResourceName;          // The resource name for this object.
-  ByteString m_GraphicsResourceName;  // Like `m_ResourceName` but for graphics.
+  // The resource name for this object.
+  ByteString m_ResourceName;
 };
 
 #endif  // CORE_FPDFAPI_PAGE_CPDF_PAGEOBJECT_H_

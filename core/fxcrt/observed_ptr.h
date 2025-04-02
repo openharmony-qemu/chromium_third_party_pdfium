@@ -9,7 +9,8 @@
 
 #include <set>
 
-#include "third_party/base/check.h"
+#include "core/fxcrt/check.h"
+#include "core/fxcrt/unowned_ptr_exclusion.h"
 
 namespace fxcrt {
 
@@ -41,6 +42,9 @@ class Observable {
 // Simple case of a self-nulling pointer.
 // Generally, pass ObservedPtr<> by non-const reference since this saves
 // considerable work compared to pass by value.
+// NOTE: Once an UnownedPtr<> is made from an underlying reference, the
+// best practice is to only refer to that object by the UnownedPtr<> and
+// not the original reference.
 template <typename T>
 class ObservedPtr final : public Observable::ObserverIface {
  public:
@@ -91,7 +95,7 @@ class ObservedPtr final : public Observable::ObserverIface {
   T* operator->() const { return m_pObservable; }
 
  private:
-  T* m_pObservable = nullptr;
+  UNOWNED_PTR_EXCLUSION T* m_pObservable = nullptr;
 };
 
 template <typename T, typename U>

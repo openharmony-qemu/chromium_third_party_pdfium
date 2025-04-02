@@ -6,13 +6,12 @@
 
 #include "fxjs/xfa/cjx_tree.h"
 
-#include <vector>
-
+#include "core/fxcrt/numerics/safe_conversions.h"
+#include "core/fxcrt/span.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/js_resources.h"
 #include "fxjs/xfa/cfxjse_class.h"
 #include "fxjs/xfa/cfxjse_engine.h"
-#include "third_party/base/numerics/safe_conversions.h"
 #include "v8/include/cppgc/allocation.h"
 #include "v8/include/v8-object.h"
 #include "v8/include/v8-primitive.h"
@@ -36,20 +35,18 @@ bool CJX_Tree::DynamicTypeIs(TypeTag eType) const {
   return eType == static_type__ || ParentType__::DynamicTypeIs(eType);
 }
 
-CJS_Result CJX_Tree::resolveNode(
-    CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+CJS_Result CJX_Tree::resolveNode(CFXJSE_Engine* runtime,
+                                 pdfium::span<v8::Local<v8::Value>> params) {
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
 
   WideString wsExpression = runtime->ToWideString(params[0]);
-  CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
   CXFA_Object* pRefNode = GetXFAObject();
   if (pRefNode->GetElementType() == XFA_Element::Xfa)
-    pRefNode = pScriptContext->GetThisObject();
+    pRefNode = runtime->GetThisObject();
 
-  absl::optional<CFXJSE_Engine::ResolveResult> maybeResult =
-      pScriptContext->ResolveObjects(
+  std::optional<CFXJSE_Engine::ResolveResult> maybeResult =
+      runtime->ResolveObjects(
           ToNode(pRefNode), wsExpression.AsStringView(),
           Mask<XFA_ResolveFlag>{
               XFA_ResolveFlag::kChildren, XFA_ResolveFlag::kAttributes,
@@ -59,9 +56,8 @@ CJS_Result CJX_Tree::resolveNode(
     return CJS_Result::Success(runtime->NewNull());
 
   if (maybeResult.value().type == CFXJSE_Engine::ResolveResult::Type::kNodes) {
-    return CJS_Result::Success(
-        GetDocument()->GetScriptContext()->GetOrCreateJSBindingFromMap(
-            maybeResult.value().objects.front().Get()));
+    return CJS_Result::Success(runtime->GetOrCreateJSBindingFromMap(
+        maybeResult.value().objects.front().Get()));
   }
 
   if (!maybeResult.value().script_attribute.callback ||
@@ -78,22 +74,20 @@ CJS_Result CJX_Tree::resolveNode(
   return CJS_Result::Success(pValue);
 }
 
-CJS_Result CJX_Tree::resolveNodes(
-    CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+CJS_Result CJX_Tree::resolveNodes(CFXJSE_Engine* runtime,
+                                  pdfium::span<v8::Local<v8::Value>> params) {
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
 
   CXFA_Object* refNode = GetXFAObject();
   if (refNode->GetElementType() == XFA_Element::Xfa)
-    refNode = GetDocument()->GetScriptContext()->GetThisObject();
+    refNode = runtime->GetThisObject();
 
-  CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
   const Mask<XFA_ResolveFlag> kFlags = {
       XFA_ResolveFlag::kChildren, XFA_ResolveFlag::kAttributes,
       XFA_ResolveFlag::kProperties, XFA_ResolveFlag::kParent,
       XFA_ResolveFlag::kSiblings};
-  return CJS_Result::Success(ResolveNodeList(pScriptContext->GetIsolate(),
+  return CJS_Result::Success(ResolveNodeList(runtime->GetIsolate(),
                                              runtime->ToWideString(params[0]),
                                              kFlags, ToNode(refNode)));
 }
@@ -132,8 +126,7 @@ void CJX_Tree::nodes(v8::Isolate* pIsolate,
                      bool bSetting,
                      XFA_Attribute eAttribute) {
   if (bSetting) {
-    WideString wsMessage = L"Unable to set ";
-    FXJSE_ThrowMessage(pIsolate, wsMessage.ToUTF8().AsStringView());
+    FXJSE_ThrowMessage(pIsolate, "Unable to set ");
     return;
   }
 
@@ -175,8 +168,8 @@ void CJX_Tree::index(v8::Isolate* pIsolate,
 
   CXFA_Node* pNode = GetXFANode();
   size_t iIndex = pNode ? pNode->GetIndexByName() : 0;
-  *pValue = fxv8::NewNumberHelper(pIsolate,
-                                  pdfium::base::checked_cast<int32_t>(iIndex));
+  *pValue =
+      fxv8::NewNumberHelper(pIsolate, pdfium::checked_cast<int32_t>(iIndex));
 }
 
 void CJX_Tree::classIndex(v8::Isolate* pIsolate,
@@ -190,8 +183,8 @@ void CJX_Tree::classIndex(v8::Isolate* pIsolate,
 
   CXFA_Node* pNode = GetXFANode();
   size_t iIndex = pNode ? pNode->GetIndexByClassName() : 0;
-  *pValue = fxv8::NewNumberHelper(pIsolate,
-                                  pdfium::base::checked_cast<int32_t>(iIndex));
+  *pValue =
+      fxv8::NewNumberHelper(pIsolate, pdfium::checked_cast<int32_t>(iIndex));
 }
 
 void CJX_Tree::somExpression(v8::Isolate* pIsolate,
@@ -220,7 +213,7 @@ v8::Local<v8::Value> CJX_Tree::ResolveNodeList(v8::Isolate* pIsolate,
   pDoc->GetNodeOwner()->PersistList(pNodeList);
 
   CFXJSE_Engine* pScriptContext = pDoc->GetScriptContext();
-  absl::optional<CFXJSE_Engine::ResolveResult> maybeResult =
+  std::optional<CFXJSE_Engine::ResolveResult> maybeResult =
       pScriptContext->ResolveObjects(refNode, wsExpression.AsStringView(),
                                      dwFlag);
 

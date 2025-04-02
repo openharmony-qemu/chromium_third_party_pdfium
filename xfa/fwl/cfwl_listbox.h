@@ -10,11 +10,14 @@
 #include <memory>
 #include <vector>
 
+#include "core/fxcrt/unowned_ptr.h"
 #include "xfa/fwl/cfwl_edit.h"
 #include "xfa/fwl/cfwl_event.h"
 #include "xfa/fwl/cfwl_listbox.h"
 #include "xfa/fwl/cfwl_widget.h"
 #include "xfa/fwl/fwl_widgetdef.h"
+
+namespace pdfium {
 
 #define FWL_STYLEEXT_LTB_MultiSelection (1L << 0)
 #define FWL_STYLEEXT_LTB_LeftAlign (0L << 4)
@@ -136,8 +139,13 @@ class CFWL_ListBox : public CFWL_Widget {
   bool m_bLButtonDown = false;
   float m_fItemHeight = 0.0f;
   float m_fScorllBarWidth = 0.0f;
-  Item* m_hAnchor = nullptr;
-  std::vector<std::unique_ptr<Item>> m_ItemArray;
+  std::vector<std::unique_ptr<Item>> m_ItemArray;  // Must outlive `m_hAnchor`.
+  UnownedPtr<Item> m_hAnchor;
 };
+
+}  // namespace pdfium
+
+// TODO(crbug.com/42271761): Remove.
+using pdfium::CFWL_ListBox;
 
 #endif  // XFA_FWL_CFWL_LISTBOX_H_

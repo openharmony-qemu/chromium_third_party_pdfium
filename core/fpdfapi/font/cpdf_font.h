@@ -10,19 +10,19 @@
 #include <stdint.h>
 
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
 #include "build/build_config.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_stream_acc.h"
+#include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_font.h"
-#include "core/fxge/freetype/fx_freetype.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
 
 class CFX_DIBitmap;
 class CPDF_CIDFont;
@@ -44,7 +44,7 @@ class CPDF_Font : public Retainable, public Observable {
     virtual void ParseContentForType3Char(CPDF_Type3Char* pChar) = 0;
     virtual bool HasPageObjects() const = 0;
     virtual CFX_FloatRect CalcBoundingBox() const = 0;
-    virtual absl::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
+    virtual std::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
     GetBitmapAndMatrixFromSoleImageOfForm() const = 0;
   };
 
@@ -68,8 +68,6 @@ class CPDF_Font : public Retainable, public Observable {
   static RetainPtr<CPDF_Font> GetStockFont(CPDF_Document* pDoc,
                                            ByteStringView fontname);
 
-  ~CPDF_Font() override;
-
   virtual bool IsType1Font() const;
   virtual bool IsTrueTypeFont() const;
   virtual bool IsType3Font() const;
@@ -88,7 +86,7 @@ class CPDF_Font : public Retainable, public Observable {
   virtual bool IsUnicodeCompatible() const = 0;
   virtual uint32_t GetNextChar(ByteStringView pString, size_t* pOffset) const;
   virtual size_t CountChar(ByteStringView pString) const;
-  virtual int AppendChar(char* buf, uint32_t charcode) const;
+  virtual void AppendChar(ByteString* buf, uint32_t charcode) const;
   virtual int GlyphFromCharCode(uint32_t charcode, bool* pVertGlyph) = 0;
 #if BUILDFLAG(IS_APPLE)
   virtual int GlyphFromCharCodeExt(uint32_t charcode);
@@ -98,7 +96,7 @@ class CPDF_Font : public Retainable, public Observable {
   virtual bool HasFontWidths() const;
 
   ByteString GetBaseFontName() const { return m_BaseFontName; }
-  absl::optional<FX_Charset> GetSubstFontCharset() const;
+  std::optional<FX_Charset> GetSubstFontCharset() const;
   bool IsEmbedded() const { return IsType3Font() || m_pFontFile != nullptr; }
   RetainPtr<CPDF_Dictionary> GetMutableFontDict() { return m_pFontDict; }
   RetainPtr<const CPDF_Dictionary> GetFontDict() const { return m_pFontDict; }
@@ -108,8 +106,7 @@ class CPDF_Font : public Retainable, public Observable {
   }
   void ClearFontDict() { m_pFontDict = nullptr; }
   bool IsStandardFont() const;
-  bool HasFace() const { return !!m_Font.GetFaceRec(); }
-  void AppendChar(ByteString* str, uint32_t charcode) const;
+  bool HasFace() const { return !!m_Font.GetFace(); }
 
   const FX_RECT& GetFontBBox() const { return m_FontBBox; }
   int GetTypeAscent() const { return m_Ascent; }
@@ -138,20 +135,19 @@ class CPDF_Font : public Retainable, public Observable {
 
  protected:
   CPDF_Font(CPDF_Document* pDocument, RetainPtr<CPDF_Dictionary> pFontDict);
-
-  static int TT2PDF(FT_Pos m, FXFT_FaceRec* face);
+  ~CPDF_Font() override;
 
   // Commonly used wrappers for UseTTCharmap().
-  static bool UseTTCharmapMSUnicode(FXFT_FaceRec* face) {
+  static bool UseTTCharmapMSUnicode(const RetainPtr<CFX_Face>& face) {
     return UseTTCharmap(face, 3, 1);
   }
-  static bool UseTTCharmapMSSymbol(FXFT_FaceRec* face) {
+  static bool UseTTCharmapMSSymbol(const RetainPtr<CFX_Face>& face) {
     return UseTTCharmap(face, 3, 0);
   }
-  static bool UseTTCharmapMacRoman(FXFT_FaceRec* face) {
+  static bool UseTTCharmapMacRoman(const RetainPtr<CFX_Face>& face) {
     return UseTTCharmap(face, 1, 0);
   }
-  static bool UseTTCharmap(FXFT_FaceRec* face,
+  static bool UseTTCharmap(const RetainPtr<CFX_Face>& face,
                            int platform_id,
                            int encoding_id);
 
@@ -174,6 +170,7 @@ class CPDF_Font : public Retainable, public Observable {
   ByteString m_BaseFontName;
   mutable std::unique_ptr<CPDF_ToUnicodeMap> m_pToUnicodeMap;
   mutable bool m_bToUnicodeLoaded = false;
+  bool m_bWillBeDestroyed = false;
   int m_Flags = 0;
   int m_StemV = 0;
   int m_Ascent = 0;

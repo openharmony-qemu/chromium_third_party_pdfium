@@ -22,11 +22,11 @@
 
 #include "fxbarcode/qrcode/BC_QRCoderMaskUtil.h"
 
+#include "core/fxcrt/check.h"
+#include "core/fxcrt/notreached.h"
 #include "fxbarcode/common/BC_CommonByteMatrix.h"
 #include "fxbarcode/qrcode/BC_QRCoder.h"
 #include "fxbarcode/qrcode/BC_QRCoderErrorCorrectionLevel.h"
-#include "third_party/base/check.h"
-#include "third_party/base/notreached.h"
 
 namespace {
 
@@ -196,8 +196,7 @@ bool CBC_QRCoderMaskUtil::GetDataMaskBit(int32_t maskPattern,
       intermediate = (((temp % 3) + ((y + x) & 0x1)) & 0x1);
       break;
     default:
-      NOTREACHED();
-      return false;
+      NOTREACHED_NORETURN();
   }
   return intermediate == 0;
 }

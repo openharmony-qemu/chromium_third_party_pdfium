@@ -6,8 +6,7 @@
 
 #include "fxjs/xfa/cjx_treelist.h"
 
-#include <vector>
-
+#include "core/fxcrt/span.h"
 #include "fxjs/js_resources.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_value.h"
@@ -33,9 +32,8 @@ CXFA_TreeList* CJX_TreeList::GetXFATreeList() {
   return ToTreeList(GetXFAObject());
 }
 
-CJS_Result CJX_TreeList::namedItem(
-    CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+CJS_Result CJX_TreeList::namedItem(CFXJSE_Engine* runtime,
+                                   pdfium::span<v8::Local<v8::Value>> params) {
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
 
@@ -44,6 +42,5 @@ CJS_Result CJX_TreeList::namedItem(
   if (!pNode)
     return CJS_Result::Success();
 
-  return CJS_Result::Success(
-      GetDocument()->GetScriptContext()->GetOrCreateJSBindingFromMap(pNode));
+  return CJS_Result::Success(runtime->GetOrCreateJSBindingFromMap(pNode));
 }
