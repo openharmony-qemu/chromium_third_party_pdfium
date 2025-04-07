@@ -83,6 +83,7 @@ source_set("fpdfdoc") {
   ]
   deps = [
     "../../constants",
+    "../fpdfapi/edit:contentstream_write_utils",
     "../fpdfapi/font",
     "../fpdfapi/page",
     "../fpdfapi/parser",
@@ -97,6 +98,7 @@ pdfium_unittest_source_set("unittests") {
   sources = [
     "cpdf_action_unittest.cpp",
     "cpdf_annot_unittest.cpp",
+    "cpdf_annotlist_unittest.cpp",
     "cpdf_bafontmap_unittest.cpp",
     "cpdf_defaultappearance_unittest.cpp",
     "cpdf_dest_unittest.cpp",
@@ -104,6 +106,7 @@ pdfium_unittest_source_set("unittests") {
     "cpdf_formfield_unittest.cpp",
     "cpdf_metadata_unittest.cpp",
     "cpdf_nametree_unittest.cpp",
+    "cpdf_pagelabel_unittest.cpp",
   ]
   deps = [
     ":fpdfdoc",

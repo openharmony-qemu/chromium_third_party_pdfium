@@ -15,9 +15,9 @@
 #include "core/fpdfapi/page/cpdf_colorspace.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/fx_coordinates.h"
-#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 
 class CFX_Font;
@@ -88,6 +88,17 @@ class CPDF_DocPageData final : public CPDF_Document::PageDataIface,
       RetainPtr<const CPDF_Stream> pProfileStream);
 
  private:
+  struct HashIccProfileKey {
+    HashIccProfileKey(DataVector<uint8_t> digest, uint32_t components);
+    HashIccProfileKey(const HashIccProfileKey& that);
+    ~HashIccProfileKey();
+
+    bool operator<(const HashIccProfileKey& other) const;
+
+    DataVector<uint8_t> digest;
+    uint32_t components;
+  };
+
   // Loads a colorspace in a context that might be while loading another
   // colorspace, or even in a recursive call from this method itself. |pVisited|
   // is passed recursively to avoid circular calls involving
@@ -109,17 +120,16 @@ class CPDF_DocPageData final : public CPDF_Document::PageDataIface,
   bool m_bForceClear = false;
 
   // Specific destruction order may be required between maps.
-  std::map<ByteString, RetainPtr<const CPDF_Stream>> m_HashProfileMap;
-  std::map<RetainPtr<const CPDF_Array>, ObservedPtr<CPDF_ColorSpace>>
+  std::map<HashIccProfileKey, RetainPtr<const CPDF_Stream>> m_HashIccProfileMap;
+  std::map<RetainPtr<const CPDF_Array>, RetainPtr<CPDF_ColorSpace>>
       m_ColorSpaceMap;
   std::map<RetainPtr<const CPDF_Stream>, RetainPtr<CPDF_StreamAcc>>
       m_FontFileMap;
-  std::map<RetainPtr<const CPDF_Stream>, ObservedPtr<CPDF_IccProfile>>
+  std::map<RetainPtr<const CPDF_Stream>, RetainPtr<CPDF_IccProfile>>
       m_IccProfileMap;
-  std::map<RetainPtr<const CPDF_Object>, ObservedPtr<CPDF_Pattern>>
-      m_PatternMap;
+  std::map<RetainPtr<const CPDF_Object>, RetainPtr<CPDF_Pattern>> m_PatternMap;
   std::map<uint32_t, RetainPtr<CPDF_Image>> m_ImageMap;
-  std::map<RetainPtr<const CPDF_Dictionary>, ObservedPtr<CPDF_Font>> m_FontMap;
+  std::map<RetainPtr<const CPDF_Dictionary>, RetainPtr<CPDF_Font>> m_FontMap;
 };
 
 #endif  // CORE_FPDFAPI_PAGE_CPDF_DOCPAGEDATA_H_

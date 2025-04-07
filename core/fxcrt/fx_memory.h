@@ -22,9 +22,16 @@ void FXMEM_DefaultFree(void* pointer);
 #ifdef __cplusplus
 }  // extern "C"
 
-#include "third_party/base/compiler_specific.h"
+#include "core/fxcrt/compiler_specific.h"
+
+#if defined(COMPILER_MSVC)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 
 void FX_InitializeMemoryAllocators();
+void FX_DestroyMemoryAllocators();
 NOINLINE void FX_OutOfMemoryTerminate(size_t size);
 
 // General Partition Allocators.
@@ -44,11 +51,19 @@ NOINLINE void FX_OutOfMemoryTerminate(size_t size);
   static_cast<type*>(pdfium::internal::Realloc(ptr, size, sizeof(type)))
 
 // These never return nullptr, but return uninitialized memory.
-// TODO(thestig): Add FX_TryAllocUninit() if there is a use case.
 #define FX_AllocUninit(type, size) \
   static_cast<type*>(pdfium::internal::AllocOrDie(size, sizeof(type)))
 #define FX_AllocUninit2D(type, w, h) \
   static_cast<type*>(pdfium::internal::AllocOrDie2D(w, h, sizeof(type)))
+
+// May return nullptr, but returns uninitialized memory otherwise.
+#define FX_TryAllocUninit(type, size) \
+  static_cast<type*>(pdfium::internal::Alloc(size, sizeof(type)))
+#define FX_TryAllocUninit2D(type, w, h) \
+  static_cast<type*>(pdfium::internal::Alloc2D(w, h, sizeof(type)))
+
+// FX_Free frees memory from the above.
+#define FX_Free(ptr) pdfium::internal::Dealloc(ptr)
 
 // String Partition Allocators.
 
@@ -56,8 +71,8 @@ NOINLINE void FX_OutOfMemoryTerminate(size_t size);
 #define FX_StringAlloc(type, size) \
   static_cast<type*>(pdfium::internal::StringAllocOrDie(size, sizeof(type)))
 
-// FX_Free accepts memory from all of the above.
-void FX_Free(void* ptr);
+// FX_StringFree frees memory from FX_StringAlloc.
+#define FX_StringFree(ptr) pdfium::internal::StringDealloc(ptr)
 
 #ifndef V8_ENABLE_SANDBOX
 // V8 Array Buffer Partition Allocators.
@@ -72,11 +87,27 @@ void* FX_ArrayBufferAllocateUninitialized(size_t length);
 void FX_ArrayBufferFree(void* data);
 #endif  // V8_ENABLE_SANDBOX
 
+// Aligned allocators.
+
+// This can be replaced with std::aligned_alloc when we have C++17.
+// Caveat: std::aligned_alloc requires the size parameter be an integral
+// multiple of alignment.
+void* FX_AlignedAlloc(size_t size, size_t alignment);
+
+inline void FX_AlignedFree(void* ptr) {
+#if defined(COMPILER_MSVC)
+  _aligned_free(ptr);
+#else
+  free(ptr);
+#endif
+}
+
 namespace pdfium {
 namespace internal {
 
 // General partition.
 void* Alloc(size_t num_members, size_t member_size);
+void* Alloc2D(size_t w, size_t h, size_t member_size);
 void* AllocOrDie(size_t num_members, size_t member_size);
 void* AllocOrDie2D(size_t w, size_t h, size_t member_size);
 void* Calloc(size_t num_members, size_t member_size);
@@ -84,10 +115,12 @@ void* Realloc(void* ptr, size_t num_members, size_t member_size);
 void* CallocOrDie(size_t num_members, size_t member_size);
 void* CallocOrDie2D(size_t w, size_t h, size_t member_size);
 void* ReallocOrDie(void* ptr, size_t num_members, size_t member_size);
+void Dealloc(void* ptr);
 
 // String partition.
 void* StringAlloc(size_t num_members, size_t member_size);
 void* StringAllocOrDie(size_t num_members, size_t member_size);
+void StringDealloc(void* ptr);
 
 }  // namespace internal
 }  // namespace pdfium

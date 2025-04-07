@@ -4,11 +4,13 @@
 
 #include "testing/test_loader.h"
 
-#include <string.h>
+#include <stddef.h>
 
-#include "third_party/base/notreached.h"
+#include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_memcpy_wrappers.h"
+#include "core/fxcrt/numerics/checked_math.h"
 
-TestLoader::TestLoader(pdfium::span<const char> span) : m_Span(span) {}
+TestLoader::TestLoader(pdfium::span<const uint8_t> span) : m_Span(span) {}
 
 // static
 int TestLoader::GetBlock(void* param,
@@ -16,11 +18,10 @@ int TestLoader::GetBlock(void* param,
                          unsigned char* pBuf,
                          unsigned long size) {
   TestLoader* pLoader = static_cast<TestLoader*>(param);
-  if (pos + size < pos || pos + size > pLoader->m_Span.size()) {
-    NOTREACHED();
-    return 0;
-  }
+  pdfium::CheckedNumeric<size_t> end = pos;
+  end += size;
+  CHECK_LE(end.ValueOrDie(), pLoader->m_Span.size());
 
-  memcpy(pBuf, &pLoader->m_Span[pos], size);
+  FXSYS_memcpy(pBuf, &pLoader->m_Span[pos], size);
   return 1;
 }

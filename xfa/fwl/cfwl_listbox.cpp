@@ -10,9 +10,8 @@
 #include <memory>
 #include <utility>
 
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/stl_util.h"
-#include "third_party/base/cxx17_backports.h"
-#include "third_party/base/numerics/safe_conversions.h"
 #include "v8/include/cppgc/visitor.h"
 #include "xfa/fde/cfde_textout.h"
 #include "xfa/fgas/graphics/cfgas_gegraphics.h"
@@ -25,6 +24,8 @@
 #include "xfa/fwl/cfwl_themetext.h"
 #include "xfa/fwl/fwl_widgetdef.h"
 #include "xfa/fwl/ifwl_themeprovider.h"
+
+namespace pdfium {
 
 namespace {
 
@@ -463,7 +464,7 @@ CFX_SizeF CFWL_ListBox::CalcSize() {
     m_pVertScrollBar->SetPageSize(rtScrollBar.height * 9 / 10);
     m_pVertScrollBar->SetStepSize(m_fItemHeight);
 
-    float fPos = pdfium::clamp(m_pVertScrollBar->GetPos(), 0.0f, fMax);
+    float fPos = std::clamp(m_pVertScrollBar->GetPos(), 0.0f, fMax);
     m_pVertScrollBar->SetPos(fPos);
     m_pVertScrollBar->SetTrackPos(fPos);
     if ((m_Properties.m_dwStyleExts & FWL_STYLEEXT_LTB_ShowScrollBarFocus) ==
@@ -493,7 +494,7 @@ CFX_SizeF CFWL_ListBox::CalcSize() {
     m_pHorzScrollBar->SetPageSize(fWidth * 9 / 10);
     m_pHorzScrollBar->SetStepSize(fWidth / 10);
 
-    float fPos = pdfium::clamp(m_pHorzScrollBar->GetPos(), 0.0f, fMax);
+    float fPos = std::clamp(m_pHorzScrollBar->GetPos(), 0.0f, fMax);
     m_pHorzScrollBar->SetPos(fPos);
     m_pHorzScrollBar->SetTrackPos(fPos);
     if ((m_Properties.m_dwStyleExts & FWL_STYLEEXT_LTB_ShowScrollBarFocus) ==
@@ -617,8 +618,6 @@ void CFWL_ListBox::OnProcessMessage(CFWL_Message* pMessage) {
         OnKeyDown(pMsg);
       break;
     }
-    default:
-      break;
   }
   // Dst target could be |this|, continue only if not destroyed by above.
   if (pMessage->GetDstTarget())
@@ -827,7 +826,7 @@ int32_t CFWL_ListBox::GetItemIndex(CFWL_Widget* pWidget, Item* pItem) {
                            return candidate.get() == pItem;
                          });
   return it != m_ItemArray.end()
-             ? pdfium::base::checked_cast<int32_t>(it - m_ItemArray.begin())
+             ? checked_cast<int32_t>(it - m_ItemArray.begin())
              : -1;
 }
 
@@ -865,3 +864,5 @@ void CFWL_ListBox::DeleteAll() {
 CFWL_ListBox::Item::Item(const WideString& text) : m_wsText(text) {}
 
 CFWL_ListBox::Item::~Item() = default;
+
+}  // namespace pdfium

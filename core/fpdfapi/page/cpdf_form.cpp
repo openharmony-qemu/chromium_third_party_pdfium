@@ -15,8 +15,12 @@
 #include "core/fpdfapi/page/cpdf_pageobjectholder.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
-#include "third_party/base/check_op.h"
+
+CPDF_Form::RecursionState::RecursionState() = default;
+
+CPDF_Form::RecursionState::~RecursionState() = default;
 
 // static
 CPDF_Dictionary* CPDF_Form::ChooseResourcesDict(
@@ -61,8 +65,8 @@ void CPDF_Form::ParseContent() {
 
 void CPDF_Form::ParseContent(const CPDF_AllStates* pGraphicStates,
                              const CFX_Matrix* pParentMatrix,
-                             std::set<const uint8_t*>* pParsedSet) {
-  ParseContentInternal(pGraphicStates, pParentMatrix, nullptr, pParsedSet);
+                             RecursionState* recursion_state) {
+  ParseContentInternal(pGraphicStates, pParentMatrix, nullptr, recursion_state);
 }
 
 void CPDF_Form::ParseContentForType3Char(CPDF_Type3Char* pType3Char) {
@@ -72,32 +76,36 @@ void CPDF_Form::ParseContentForType3Char(CPDF_Type3Char* pType3Char) {
 void CPDF_Form::ParseContentInternal(const CPDF_AllStates* pGraphicStates,
                                      const CFX_Matrix* pParentMatrix,
                                      CPDF_Type3Char* pType3Char,
-                                     std::set<const uint8_t*>* pParsedSet) {
+                                     RecursionState* recursion_state) {
   if (GetParseState() == ParseState::kParsed)
     return;
 
   if (GetParseState() == ParseState::kNotParsed) {
     StartParse(std::make_unique<CPDF_ContentParser>(
         GetStream(), this, pGraphicStates, pParentMatrix, pType3Char,
-        pParsedSet ? pParsedSet : &m_ParsedSet));
+        recursion_state ? recursion_state : &m_RecursionState));
   }
   DCHECK_EQ(GetParseState(), ParseState::kParsing);
   ContinueParse(nullptr);
 }
 
 bool CPDF_Form::HasPageObjects() const {
-  return GetPageObjectCount() != 0;
+  return GetActivePageObjectCount() != 0;
 }
 
 CFX_FloatRect CPDF_Form::CalcBoundingBox() const {
-  if (GetPageObjectCount() == 0)
+  if (GetActivePageObjectCount() == 0) {
     return CFX_FloatRect();
+  }
 
   float left = 1000000.0f;
   float right = -1000000.0f;
   float bottom = 1000000.0f;
   float top = -1000000.0f;
   for (const auto& pObj : *this) {
+    if (!pObj->IsActive()) {
+      continue;
+    }
     const auto& rect = pObj->GetRect();
     left = std::min(left, rect.left);
     right = std::max(right, rect.right);
@@ -111,14 +119,18 @@ RetainPtr<const CPDF_Stream> CPDF_Form::GetStream() const {
   return m_pFormStream;
 }
 
-absl::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
+std::optional<std::pair<RetainPtr<CFX_DIBitmap>, CFX_Matrix>>
 CPDF_Form::GetBitmapAndMatrixFromSoleImageOfForm() const {
-  if (GetPageObjectCount() != 1)
-    return absl::nullopt;
+  // TODO(crbug.com/377660088): Determine if there is a case where only a single
+  // active object but other inactive objects is problematic for this method.
+  if (GetActivePageObjectCount() != 1) {
+    return std::nullopt;
+  }
 
   CPDF_ImageObject* pImageObject = (*begin())->AsImage();
-  if (!pImageObject)
-    return absl::nullopt;
+  if (!pImageObject) {
+    return std::nullopt;
+  }
 
   return {{pImageObject->GetIndependentBitmap(), pImageObject->matrix()}};
 }

@@ -6,12 +6,11 @@
 
 #include "fxjs/xfa/cjx_hostpseudomodel.h"
 
-#include <vector>
-
+#include "core/fxcrt/check.h"
+#include "core/fxcrt/span.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/js_resources.h"
 #include "fxjs/xfa/cfxjse_engine.h"
-#include "third_party/base/check.h"
 #include "v8/include/v8-object.h"
 #include "xfa/fxfa/cxfa_ffdoc.h"
 #include "xfa/fxfa/cxfa_ffnotify.h"
@@ -28,10 +27,10 @@ size_t FilterName(WideStringView wsExpression,
     return nLength;
 
   size_t nCount = 0;
+  pdfium::span<const wchar_t> pSrc = wsExpression.span();
   {
     // Span's lifetime must end before ReleaseBuffer() below.
     pdfium::span<wchar_t> pBuf = wsFilter.GetBuffer(nLength - nStart);
-    const wchar_t* pSrc = wsExpression.unterminated_c_str();
     while (nStart < nLength) {
       wchar_t wCur = pSrc[nStart++];
       if (wCur == ',')
@@ -41,7 +40,7 @@ size_t FilterName(WideStringView wsExpression,
     }
   }
   wsFilter.ReleaseBuffer(nCount);
-  wsFilter.Trim();
+  wsFilter.TrimWhitespace();
   return nStart;
 }
 
@@ -258,9 +257,10 @@ void CJX_HostPseudoModel::name(v8::Isolate* pIsolate,
 
 CJS_Result CJX_HostPseudoModel::gotoURL(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -275,9 +275,10 @@ CJS_Result CJX_HostPseudoModel::gotoURL(
 
 CJS_Result CJX_HostPseudoModel::openList(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -290,16 +291,15 @@ CJS_Result CJX_HostPseudoModel::openList(
   if (params[0]->IsObject()) {
     pNode = ToNode(runtime->ToXFAObject(params[0]));
   } else if (params[0]->IsString()) {
-    CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-    CXFA_Object* pObject = pScriptContext->GetThisObject();
+    CXFA_Object* pObject = runtime->GetThisObject();
     if (!pObject)
       return CJS_Result::Success();
 
     constexpr Mask<XFA_ResolveFlag> kFlags = {XFA_ResolveFlag::kChildren,
                                               XFA_ResolveFlag::kParent,
                                               XFA_ResolveFlag::kSiblings};
-    absl::optional<CFXJSE_Engine::ResolveResult> maybeResult =
-        pScriptContext->ResolveObjects(
+    std::optional<CFXJSE_Engine::ResolveResult> maybeResult =
+        runtime->ResolveObjects(
             pObject, runtime->ToWideString(params[0]).AsStringView(), kFlags);
     if (!maybeResult.has_value() ||
         !maybeResult.value().objects.front()->IsNode()) {
@@ -315,7 +315,7 @@ CJS_Result CJX_HostPseudoModel::openList(
 
 CJS_Result CJX_HostPseudoModel::response(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   if (params.empty() || params.size() > 4)
     return CJS_Result::Failure(JSMessage::kParamError);
 
@@ -347,13 +347,13 @@ CJS_Result CJX_HostPseudoModel::response(
 
 CJS_Result CJX_HostPseudoModel::documentInBatch(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   return CJS_Result::Success(runtime->NewNumber(0));
 }
 
 CJS_Result CJX_HostPseudoModel::resetData(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   if (params.size() > 1)
     return CJS_Result::Failure(JSMessage::kParamError);
 
@@ -376,16 +376,15 @@ CJS_Result CJX_HostPseudoModel::resetData(
   const size_t nExpLength = expression.GetLength();
   while (nStart < nExpLength) {
     nStart = FilterName(expression.AsStringView(), nStart, wsName);
-    CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-    CXFA_Object* pObject = pScriptContext->GetThisObject();
+    CXFA_Object* pObject = runtime->GetThisObject();
     if (!pObject)
       return CJS_Result::Success();
 
     constexpr Mask<XFA_ResolveFlag> kFlags = {XFA_ResolveFlag::kChildren,
                                               XFA_ResolveFlag::kParent,
                                               XFA_ResolveFlag::kSiblings};
-    absl::optional<CFXJSE_Engine::ResolveResult> maybeResult =
-        pScriptContext->ResolveObjects(pObject, wsName.AsStringView(), kFlags);
+    std::optional<CFXJSE_Engine::ResolveResult> maybeResult =
+        runtime->ResolveObjects(pObject, wsName.AsStringView(), kFlags);
     if (!maybeResult.has_value() ||
         !maybeResult.value().objects.front()->IsNode())
       continue;
@@ -401,9 +400,10 @@ CJS_Result CJX_HostPseudoModel::resetData(
 
 CJS_Result CJX_HostPseudoModel::beep(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.size() > 1)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -422,9 +422,10 @@ CJS_Result CJX_HostPseudoModel::beep(
 
 CJS_Result CJX_HostPseudoModel::setFocus(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.size() != 1)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -438,16 +439,15 @@ CJS_Result CJX_HostPseudoModel::setFocus(
     if (params[0]->IsObject()) {
       pNode = ToNode(runtime->ToXFAObject(params[0]));
     } else if (params[0]->IsString()) {
-      CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-      CXFA_Object* pObject = pScriptContext->GetThisObject();
+      CXFA_Object* pObject = runtime->GetThisObject();
       if (!pObject)
         return CJS_Result::Success();
 
       constexpr Mask<XFA_ResolveFlag> kFlags = {XFA_ResolveFlag::kChildren,
                                                 XFA_ResolveFlag::kParent,
                                                 XFA_ResolveFlag::kSiblings};
-      absl::optional<CFXJSE_Engine::ResolveResult> maybeResult =
-          pScriptContext->ResolveObjects(
+      std::optional<CFXJSE_Engine::ResolveResult> maybeResult =
+          runtime->ResolveObjects(
               pObject, runtime->ToWideString(params[0]).AsStringView(), kFlags);
       if (!maybeResult.has_value() ||
           !maybeResult.value().objects.front()->IsNode()) {
@@ -462,7 +462,7 @@ CJS_Result CJX_HostPseudoModel::setFocus(
 
 CJS_Result CJX_HostPseudoModel::getFocus(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   CXFA_FFNotify* pNotify = GetDocument()->GetNotify();
   if (!pNotify)
     return CJS_Result::Success();
@@ -471,17 +471,15 @@ CJS_Result CJX_HostPseudoModel::getFocus(
   if (!pNode)
     return CJS_Result::Success();
 
-  v8::Local<v8::Value> value =
-      GetDocument()->GetScriptContext()->GetOrCreateJSBindingFromMap(pNode);
-
-  return CJS_Result::Success(value);
+  return CJS_Result::Success(runtime->GetOrCreateJSBindingFromMap(pNode));
 }
 
 CJS_Result CJX_HostPseudoModel::messageBox(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.empty() || params.size() > 4)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -519,15 +517,16 @@ CJS_Result CJX_HostPseudoModel::messageBox(
 
 CJS_Result CJX_HostPseudoModel::documentCountInBatch(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   return CJS_Result::Success(runtime->NewNumber(0));
 }
 
 CJS_Result CJX_HostPseudoModel::print(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  if (!GetDocument()->GetScriptContext()->IsRunAtClient())
+    pdfium::span<v8::Local<v8::Value>> params) {
+  if (!runtime->IsRunAtClient()) {
     return CJS_Result::Success();
+  }
 
   if (params.size() != 8)
     return CJS_Result::Failure(JSMessage::kParamError);
@@ -558,7 +557,7 @@ CJS_Result CJX_HostPseudoModel::print(
 
 CJS_Result CJX_HostPseudoModel::importData(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   if (params.empty() || params.size() > 1)
     return CJS_Result::Failure(JSMessage::kParamError);
 
@@ -567,7 +566,7 @@ CJS_Result CJX_HostPseudoModel::importData(
 
 CJS_Result CJX_HostPseudoModel::exportData(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   if (params.empty() || params.size() > 2)
     return CJS_Result::Failure(JSMessage::kParamError);
 
@@ -589,7 +588,7 @@ CJS_Result CJX_HostPseudoModel::exportData(
 
 CJS_Result CJX_HostPseudoModel::pageUp(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   CXFA_FFNotify* pNotify = GetDocument()->GetNotify();
   if (!pNotify)
     return CJS_Result::Success();
@@ -605,7 +604,7 @@ CJS_Result CJX_HostPseudoModel::pageUp(
 
 CJS_Result CJX_HostPseudoModel::pageDown(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
+    pdfium::span<v8::Local<v8::Value>> params) {
   CXFA_FFNotify* pNotify = GetDocument()->GetNotify();
   if (!pNotify)
     return CJS_Result::Success();

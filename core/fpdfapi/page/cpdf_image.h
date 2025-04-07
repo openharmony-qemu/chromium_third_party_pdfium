@@ -11,8 +11,8 @@
 
 #include "core/fpdfapi/page/cpdf_colorspace.h"
 #include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "third_party/base/span.h"
 
 class CFX_DIBBase;
 class CFX_DIBitmap;
@@ -31,11 +31,14 @@ class CPDF_Image final : public Retainable {
   static bool IsValidJpegComponent(int32_t comps);
   static bool IsValidJpegBitsPerComponent(int32_t bpc);
 
+  // Can only be called when `IsInline()` returns true.
   void ConvertStreamToIndirectObject();
 
   RetainPtr<const CPDF_Dictionary> GetDict() const;
   RetainPtr<const CPDF_Stream> GetStream() const;
   RetainPtr<const CPDF_Dictionary> GetOC() const;
+
+  // Never returns nullptr.
   CPDF_Document* GetDocument() const { return m_pDocument; }
 
   int32_t GetPixelHeight() const { return m_Height; }
@@ -53,6 +56,9 @@ class CPDF_Image final : public Retainable {
   void SetJpegImageInline(RetainPtr<IFX_SeekableReadStream> pFile);
 
   void ResetCache(CPDF_Page* pPage);
+
+  void WillBeDestroyed();
+  bool IsGoingToBeDestroyed() const { return m_bWillBeDestroyed; }
 
   // Returns whether to Continue() or not.
   bool StartLoadDIBBase(const CPDF_Dictionary* pFormResource,
@@ -84,6 +90,7 @@ class CPDF_Image final : public Retainable {
   bool m_bIsInline = false;
   bool m_bIsMask = false;
   bool m_bInterpolate = false;
+  bool m_bWillBeDestroyed = false;
   UnownedPtr<CPDF_Document> const m_pDocument;
   RetainPtr<CFX_DIBBase> m_pDIBBase;
   RetainPtr<CFX_DIBBase> m_pMask;

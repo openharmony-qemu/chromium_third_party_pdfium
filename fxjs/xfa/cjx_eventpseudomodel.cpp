@@ -7,12 +7,12 @@
 #include "fxjs/xfa/cjx_eventpseudomodel.h"
 
 #include <algorithm>
-#include <vector>
 
+#include "core/fxcrt/notreached.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
+#include "core/fxcrt/span.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/xfa/cfxjse_engine.h"
-#include "third_party/base/notreached.h"
-#include "third_party/base/numerics/safe_conversions.h"
 #include "v8/include/v8-primitive.h"
 #include "xfa/fxfa/cxfa_eventparam.h"
 #include "xfa/fxfa/cxfa_ffnotify.h"
@@ -126,8 +126,8 @@ void CJX_EventPseudoModel::newText(v8::Isolate* pIsolate,
   if (bSetting)
     return;
 
-  CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-  CXFA_EventParam* pEventParam = pScriptContext->GetEventParam();
+  CXFA_EventParam* pEventParam =
+      GetDocument()->GetScriptContext()->GetEventParam();
   if (!pEventParam)
     return;
 
@@ -200,9 +200,8 @@ void CJX_EventPseudoModel::target(v8::Isolate* pIsolate,
 
 CJS_Result CJX_EventPseudoModel::emit(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-  CXFA_EventParam* pEventParam = pScriptContext->GetEventParam();
+    pdfium::span<v8::Local<v8::Value>> params) {
+  CXFA_EventParam* pEventParam = runtime->GetEventParam();
   if (!pEventParam)
     return CJS_Result::Success();
 
@@ -210,17 +209,16 @@ CJS_Result CJX_EventPseudoModel::emit(
   if (!pNotify)
     return CJS_Result::Success();
 
-  pNotify->HandleWidgetEvent(pScriptContext->GetEventTarget(), pEventParam);
+  pNotify->HandleWidgetEvent(runtime->GetEventTarget(), pEventParam);
   return CJS_Result::Success();
 }
 
 CJS_Result CJX_EventPseudoModel::reset(
     CFXJSE_Engine* runtime,
-    const std::vector<v8::Local<v8::Value>>& params) {
-  CFXJSE_Engine* pScriptContext = GetDocument()->GetScriptContext();
-  CXFA_EventParam* pEventParam = pScriptContext->GetEventParam();
+    pdfium::span<v8::Local<v8::Value>> params) {
+  CXFA_EventParam* pEventParam = runtime->GetEventParam();
   if (pEventParam)
-    *pEventParam = CXFA_EventParam();
+    *pEventParam = CXFA_EventParam(XFA_EVENT_Unknown);
 
   return CJS_Result::Success();
 }
@@ -266,8 +264,7 @@ void CJX_EventPseudoModel::Property(v8::Isolate* pIsolate,
                      bSetting);
       break;
     case XFA_Event::NewText:
-      NOTREACHED();
-      break;
+      NOTREACHED_NORETURN();
     case XFA_Event::PreviousContentType:
       StringProperty(pIsolate, pValue, &pEventParam->m_wsPrevContentType,
                      bSetting);
@@ -283,8 +280,8 @@ void CJX_EventPseudoModel::Property(v8::Isolate* pIsolate,
 
       pEventParam->m_iSelEnd = std::max(0, pEventParam->m_iSelEnd);
       pEventParam->m_iSelEnd = std::min(
-          pEventParam->m_iSelEnd, pdfium::base::checked_cast<int32_t>(
-                                      pEventParam->m_wsPrevText.GetLength()));
+          pEventParam->m_iSelEnd,
+          pdfium::checked_cast<int32_t>(pEventParam->m_wsPrevText.GetLength()));
       pEventParam->m_iSelStart =
           std::min(pEventParam->m_iSelStart, pEventParam->m_iSelEnd);
       break;
@@ -292,8 +289,8 @@ void CJX_EventPseudoModel::Property(v8::Isolate* pIsolate,
       IntegerProperty(pIsolate, pValue, &pEventParam->m_iSelStart, bSetting);
       pEventParam->m_iSelStart = std::max(0, pEventParam->m_iSelStart);
       pEventParam->m_iSelStart = std::min(
-          pEventParam->m_iSelStart, pdfium::base::checked_cast<int32_t>(
-                                        pEventParam->m_wsPrevText.GetLength()));
+          pEventParam->m_iSelStart,
+          pdfium::checked_cast<int32_t>(pEventParam->m_wsPrevText.GetLength()));
       pEventParam->m_iSelEnd =
           std::max(pEventParam->m_iSelStart, pEventParam->m_iSelEnd);
       break;
@@ -309,7 +306,6 @@ void CJX_EventPseudoModel::Property(v8::Isolate* pIsolate,
                      bSetting);
       break;
     case XFA_Event::Target:
-    default:
       break;
   }
 }

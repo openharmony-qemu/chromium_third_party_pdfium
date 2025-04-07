@@ -7,11 +7,14 @@
 #ifndef CORE_FPDFAPI_PAGE_CPDF_GENERALSTATE_H_
 #define CORE_FPDFAPI_PAGE_CPDF_GENERALSTATE_H_
 
+#include <vector>
+
 #include "constants/transparency.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/shared_copy_on_write.h"
+#include "core/fxcrt/span.h"
 #include "core/fxge/dib/fx_dib.h"
 
 class CPDF_Dictionary;
@@ -76,8 +79,9 @@ class CPDF_GeneralState {
   void SetAlphaSource(bool source);
   void SetTextKnockout(bool knockout);
 
-  void SetMatrix(const CFX_Matrix& matrix);
-  CFX_Matrix* GetMutableMatrix();
+  void SetGraphicsResourceNames(std::vector<ByteString> names);
+  void AppendGraphicsResourceName(ByteString name);
+  pdfium::span<const ByteString> GetGraphicsResourceNames() const;
 
  private:
   class StateData final : public Retainable {
@@ -94,7 +98,6 @@ class CPDF_GeneralState {
     float m_FillAlpha = 1.0f;
     RetainPtr<const CPDF_Object> m_pTR;
     RetainPtr<CPDF_TransferFunc> m_pTransferFunc;
-    CFX_Matrix m_Matrix;
     int m_RenderIntent = 0;
     bool m_StrokeAdjust = false;
     bool m_AlphaSource = false;
@@ -107,6 +110,8 @@ class CPDF_GeneralState {
     RetainPtr<const CPDF_Object> m_pHT;
     float m_Flatness = 1.0f;
     float m_Smoothness = 0.0f;
+    // The resource names of the graphics states that apply to this object.
+    std::vector<ByteString> m_GraphicsResourceNames;
 
    private:
     StateData();

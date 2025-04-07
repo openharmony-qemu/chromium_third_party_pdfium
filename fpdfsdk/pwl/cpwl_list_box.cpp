@@ -9,13 +9,13 @@
 #include <sstream>
 #include <utility>
 
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "fpdfsdk/pwl/cpwl_edit.h"
 #include "fpdfsdk/pwl/cpwl_edit_impl.h"
 #include "fpdfsdk/pwl/cpwl_scroll_bar.h"
 #include "fpdfsdk/pwl/ipwl_fillernotify.h"
 #include "public/fpdf_fwlevent.h"
-#include "third_party/base/numerics/safe_conversions.h"
 
 CPWL_ListBox::CPWL_ListBox(
     const CreateParams& cp,
@@ -194,9 +194,10 @@ void CPWL_ListBox::ScrollWindowVertically(float pos) {
   m_pListCtrl->SetScrollPos(CFX_PointF(0, pos));
 }
 
-bool CPWL_ListBox::RePosChildWnd() {
-  if (!CPWL_Wnd::RePosChildWnd())
+bool CPWL_ListBox::RepositionChildWnd() {
+  if (!CPWL_Wnd::RepositionChildWnd()) {
     return false;
+  }
 
   m_pListCtrl->SetPlateRect(GetListRect());
   return true;
@@ -204,22 +205,19 @@ bool CPWL_ListBox::RePosChildWnd() {
 
 bool CPWL_ListBox::OnNotifySelectionChanged(bool bKeyDown,
                                             Mask<FWL_EVENTFLAG> nFlag) {
-  ObservedPtr<CPWL_Wnd> thisObserved(this);
-
-  WideString swChange = GetText();
+  ObservedPtr<CPWL_ListBox> this_observed(this);
+  WideString swChange = this_observed->GetText();
   WideString strChangeEx;
   int nSelStart = 0;
-  int nSelEnd = pdfium::base::checked_cast<int>(swChange.GetLength());
-  bool bRC;
-  bool bExit;
-  std::tie(bRC, bExit) = GetFillerNotify()->OnBeforeKeyStroke(
-      GetAttachedData(), swChange, strChangeEx, nSelStart, nSelEnd, bKeyDown,
-      nFlag);
-
-  if (!thisObserved)
+  int nSelEnd = pdfium::checked_cast<int>(swChange.GetLength());
+  IPWL_FillerNotify::BeforeKeystrokeResult result =
+      this_observed->GetFillerNotify()->OnBeforeKeyStroke(
+          this_observed->GetAttachedData(), swChange, strChangeEx, nSelStart,
+          nSelEnd, bKeyDown, nFlag);
+  if (!this_observed) {
     return false;
-
-  return bExit;
+  }
+  return result.exit;
 }
 
 CFX_FloatRect CPWL_ListBox::GetFocusRect() const {
@@ -270,15 +268,13 @@ void CPWL_ListBox::OnSetScrollInfoY(float fPlateMin,
                           Info.fContentMax - Info.fContentMin) ||
       FXSYS_IsFloatEqual(Info.fPlateWidth,
                          Info.fContentMax - Info.fContentMin)) {
-    if (pScroll->IsVisible()) {
-      pScroll->SetVisible(false);
-      RePosChildWnd();
+    if (pScroll->IsVisible() && pScroll->SetVisible(false)) {
+      RepositionChildWnd();
     }
-  } else {
-    if (!pScroll->IsVisible()) {
-      pScroll->SetVisible(true);
-      RePosChildWnd();
-    }
+    return;
+  }
+  if (!pScroll->IsVisible() && pScroll->SetVisible(true)) {
+    RepositionChildWnd();
   }
 }
 
@@ -286,8 +282,8 @@ void CPWL_ListBox::OnSetScrollPosY(float fy) {
   SetScrollPosition(fy);
 }
 
-void CPWL_ListBox::OnInvalidateRect(const CFX_FloatRect& rect) {
-  InvalidateRect(&rect);
+bool CPWL_ListBox::OnInvalidateRect(const CFX_FloatRect& rect) {
+  return InvalidateRect(&rect);
 }
 
 void CPWL_ListBox::Select(int32_t nItemIndex) {

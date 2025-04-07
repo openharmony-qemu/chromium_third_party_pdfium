@@ -9,8 +9,8 @@
 #include <memory>
 
 #include "build/build_config.h"
+#include "core/fxcrt/ptr_util.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "third_party/base/ptr_util.h"
 
 #if BUILDFLAG(IS_WIN)
 #error "built on wrong platform"
@@ -57,15 +57,10 @@ bool FX_PosixFolder::GetNextFile(ByteString* filename, bool* bFolder) {
 
   ByteString fullpath = m_Path + "/" + de->d_name;
   struct stat deStat;
-  ByteString file = de->d_name;
-  if (
-#if BUILDFLAG(IS_OHOS)
-    !(file == "." || file == "..") &&
-#endif
-      stat(fullpath.c_str(), &deStat) < 0)
+  if (stat(fullpath.c_str(), &deStat) < 0)
     return false;
 
-  *filename = file;
+  *filename = de->d_name;
   *bFolder = S_ISDIR(deStat.st_mode);
   return true;
 }

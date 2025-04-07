@@ -11,10 +11,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
 
 #include "build/build_config.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -55,33 +55,25 @@ extern "C" {
 #define FXSYS_itoa _itoa
 #define FXSYS_strlwr _strlwr
 #define FXSYS_strupr _strupr
-#define FXSYS_stricmp _stricmp
-#define FXSYS_wcsicmp _wcsicmp
 #define FXSYS_wcslwr _wcslwr
 #define FXSYS_wcsupr _wcsupr
-size_t FXSYS_wcsftime(wchar_t* strDest,
-                      size_t maxsize,
-                      const wchar_t* format,
-                      const struct tm* timeptr);
 #define FXSYS_SetLastError SetLastError
 #define FXSYS_GetLastError GetLastError
+UNSAFE_BUFFER_USAGE size_t FXSYS_wcsftime(wchar_t* strDest,
+                                          size_t maxsize,
+                                          const wchar_t* format,
+                                          const struct tm* timeptr);
 #else  // BUILDFLAG(IS_WIN)
 char* FXSYS_itoa(int value, char* str, int radix);
 char* FXSYS_strlwr(char* str);
 char* FXSYS_strupr(char* str);
-int FXSYS_stricmp(const char* str1, const char* str2);
-int FXSYS_wcsicmp(const wchar_t* str1, const wchar_t* str2);
 wchar_t* FXSYS_wcslwr(wchar_t* str);
 wchar_t* FXSYS_wcsupr(wchar_t* str);
-#define FXSYS_wcsftime wcsftime
 void FXSYS_SetLastError(uint32_t err);
 uint32_t FXSYS_GetLastError();
+#define FXSYS_wcsftime wcsftime
 #endif  // BUILDFLAG(IS_WIN)
 
-int32_t FXSYS_atoi(const char* str);
-uint32_t FXSYS_atoui(const char* str);
-int32_t FXSYS_wtoi(const wchar_t* str);
-int64_t FXSYS_atoi64(const char* str);
 const char* FXSYS_i64toa(int64_t value, char* str, int radix);
 int FXSYS_roundf(float f);
 int FXSYS_round(double d);
@@ -90,52 +82,14 @@ float FXSYS_sqrt2(float a, float b);
 #ifdef __cplusplus
 }  // extern "C"
 
-// C++-only section
+// C++-only section to allow future use of TerminatedPtr<>.
+int FXSYS_stricmp(const char* str1, const char* str2);
+int FXSYS_wcsicmp(const wchar_t* str1, const wchar_t* str2);
+int32_t FXSYS_atoi(const char* str);
+int32_t FXSYS_wtoi(const wchar_t* str);
+uint32_t FXSYS_atoui(const char* str);
+int64_t FXSYS_atoi64(const char* str);
 
-// Overloaded functions for C++ templates
-inline size_t FXSYS_len(const char* ptr) {
-  return strlen(ptr);
-}
-
-inline size_t FXSYS_len(const wchar_t* ptr) {
-  return wcslen(ptr);
-}
-
-inline int FXSYS_cmp(const char* ptr1, const char* ptr2, size_t len) {
-  return memcmp(ptr1, ptr2, len);
-}
-
-inline int FXSYS_cmp(const wchar_t* ptr1, const wchar_t* ptr2, size_t len) {
-  return wmemcmp(ptr1, ptr2, len);
-}
-
-inline const char* FXSYS_chr(const char* ptr, char ch, size_t len) {
-  return reinterpret_cast<const char*>(memchr(ptr, ch, len));
-}
-
-inline const wchar_t* FXSYS_chr(const wchar_t* ptr, wchar_t ch, size_t len) {
-  return wmemchr(ptr, ch, len);
-}
-
-// Could be C, but uses C++-style casting.
-#define FXSYS_UINT16_GET_LSBFIRST(p)                               \
-  (static_cast<uint16_t>(                                          \
-      (static_cast<uint32_t>(static_cast<uint8_t>((p)[1])) << 8) | \
-      (static_cast<uint32_t>(static_cast<uint8_t>((p)[0])))))
-#define FXSYS_UINT16_GET_MSBFIRST(p)                               \
-  (static_cast<uint16_t>(                                          \
-      (static_cast<uint32_t>(static_cast<uint8_t>((p)[0])) << 8) | \
-      (static_cast<uint32_t>(static_cast<uint8_t>((p)[1])))))
-#define FXSYS_UINT32_GET_LSBFIRST(p)                             \
-  ((static_cast<uint32_t>(static_cast<uint8_t>((p)[3])) << 24) | \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[2])) << 16) | \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[1])) << 8) |  \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[0]))))
-#define FXSYS_UINT32_GET_MSBFIRST(p)                             \
-  ((static_cast<uint32_t>(static_cast<uint8_t>((p)[0])) << 24) | \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[1])) << 16) | \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[2])) << 8) |  \
-   (static_cast<uint32_t>(static_cast<uint8_t>((p)[3]))))
 #endif  // __cplusplus
 
 #endif  // CORE_FXCRT_FX_SYSTEM_H_

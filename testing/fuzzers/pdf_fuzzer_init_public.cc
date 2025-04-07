@@ -25,9 +25,6 @@
 #include <windows.h>
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
-#elif defined(__Fuchsia__)
-#include <limits.h>
-#include <unistd.h>
 #else  // Linux
 #include <linux/limits.h>
 #include <unistd.h>
@@ -36,8 +33,9 @@
 namespace {
 
 // pdf_fuzzer_init.cc and pdf_fuzzer_init_public.cc are mutually exclusive
-// and should not be built together.
-PDFFuzzerInitPublic* g_instance = new PDFFuzzerInitPublic();
+// and should not be built together. Static initializers and destructors
+// avoid problems with fuzzer initialization and termination.
+PDFFuzzerInitPublic g_instance;
 
 #ifdef PDF_ENABLE_V8
 std::string ProgramPath() {
@@ -84,7 +82,7 @@ PDFFuzzerInitPublic::PDFFuzzerInitPublic() {
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
   memset(&config_, '\0', sizeof(config_));
-  config_.version = 3;
+  config_.version = 4;
   config_.m_pUserFontPaths = nullptr;
   config_.m_pPlatform = nullptr;
   config_.m_pIsolate = nullptr;
@@ -93,6 +91,11 @@ PDFFuzzerInitPublic::PDFFuzzerInitPublic() {
   config_.m_pPlatform = platform_.get();
   config_.m_pIsolate = isolate_.get();
 #endif  // PDF_ENABLE_V8
+#if defined(PDF_USE_SKIA)
+  config_.m_RendererType = FPDF_RENDERERTYPE_SKIA;
+#else
+  config_.m_RendererType = FPDF_RENDERERTYPE_AGG;
+#endif
   FPDF_InitLibraryWithConfig(&config_);
 
   memset(&unsupport_info_, '\0', sizeof(unsupport_info_));

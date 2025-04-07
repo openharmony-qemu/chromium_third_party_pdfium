@@ -8,31 +8,46 @@
 #define CORE_FPDFAPI_PARSER_FPDF_PARSER_UTILITY_H_
 
 #include <iosfwd>
+#include <limits>
+#include <optional>
 #include <vector>
 
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
 
 class CPDF_Array;
 class CPDF_Dictionary;
 class CPDF_Object;
 class IFX_SeekableReadStream;
 
-// Use the accessors below instead of directly accessing PDF_CharType.
-extern const char PDF_CharType[256];
+// Use the accessors below instead of directly accessing kPDFCharTypes.
+extern const char kPDFCharTypes[256];
+
+inline uint8_t GetPDFCharTypeFromArray(uint8_t c) {
+  static_assert(std::numeric_limits<decltype(c)>::min() == 0);
+  static_assert(std::numeric_limits<decltype(c)>::max() <
+                std::size(kPDFCharTypes));
+
+  // SAFETY: previous static_asserts show table covers entire range
+  // of the index's type.
+  return UNSAFE_BUFFERS(kPDFCharTypes[c]);
+}
 
 inline bool PDFCharIsWhitespace(uint8_t c) {
-  return PDF_CharType[c] == 'W';
+  return GetPDFCharTypeFromArray(c) == 'W';
 }
+
 inline bool PDFCharIsNumeric(uint8_t c) {
-  return PDF_CharType[c] == 'N';
+  return GetPDFCharTypeFromArray(c) == 'N';
 }
+
 inline bool PDFCharIsDelimiter(uint8_t c) {
-  return PDF_CharType[c] == 'D';
+  return GetPDFCharTypeFromArray(c) == 'D';
 }
+
 inline bool PDFCharIsOther(uint8_t c) {
-  return PDF_CharType[c] == 'R';
+  return GetPDFCharTypeFromArray(c) == 'R';
 }
 
 inline bool PDFCharIsLineEnding(uint8_t c) {
@@ -42,7 +57,7 @@ inline bool PDFCharIsLineEnding(uint8_t c) {
 // On success, return a positive offset value to the PDF header. If the header
 // cannot be found, or if there is an error reading from |pFile|, then return
 // nullopt.
-absl::optional<FX_FILESIZE> GetHeaderOffset(
+std::optional<FX_FILESIZE> GetHeaderOffset(
     const RetainPtr<IFX_SeekableReadStream>& pFile);
 
 ByteString PDF_NameDecode(ByteStringView orig);

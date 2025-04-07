@@ -79,12 +79,9 @@ void CPDF_ImageObject::SetImageMatrix(const CFX_Matrix& matrix) {
 }
 
 void CPDF_ImageObject::MaybePurgeCache() {
-  if (!m_pImage)
+  if (!m_pImage || m_pImage->IsGoingToBeDestroyed()) {
     return;
-
-  auto* pDoc = m_pImage->GetDocument();
-  if (!pDoc)
-    return;
+  }
 
   RetainPtr<const CPDF_Stream> pStream = m_pImage->GetStream();
   if (!pStream)
@@ -93,6 +90,9 @@ void CPDF_ImageObject::MaybePurgeCache() {
   uint32_t objnum = pStream->GetObjNum();
   if (!objnum)
     return;
+
+  auto* pDoc = m_pImage->GetDocument();
+  CHECK(pDoc);
 
   m_pImage.Reset();  // Clear my reference before asking the cache.
   pDoc->MaybePurgeImage(objnum);
