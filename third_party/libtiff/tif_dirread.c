@@ -4211,11 +4211,9 @@ int TIFFReadDirectory(TIFF *tif)
                                 dp->tdir_tag, dp->tdir_tag);
                 /* the following knowingly leaks the
                    anonymous field structure */
-                if (!_TIFFMergeFields(
-                        tif,
-                        _TIFFCreateAnonField(tif, dp->tdir_tag,
-                                             (TIFFDataType)dp->tdir_type),
-                        1))
+                const TIFFField *fld = _TIFFCreateAnonField(
+                    tif, dp->tdir_tag, (TIFFDataType)dp->tdir_type);
+                if (fd == NULL || !_TIFFMergeFields(tif, fld, 1))
                 {
                     TIFFWarningExtR(
                         tif, module,
@@ -5052,11 +5050,9 @@ int TIFFReadCustomDirectory(TIFF *tif, toff_t diroff,
                             "Unknown field with tag %" PRIu16 " (0x%" PRIx16
                             ") encountered",
                             dp->tdir_tag, dp->tdir_tag);
-            if (!_TIFFMergeFields(
-                    tif,
-                    _TIFFCreateAnonField(tif, dp->tdir_tag,
-                                         (TIFFDataType)dp->tdir_type),
-                    1))
+            const TIFFField *fld = _TIFFCreateAnonField(
+                tif, dp->tdir_tag, (TIFFDataType)dp->tdir_type);
+            if (fd == NULL || !_TIFFMergeFields(tif, fld, 1))
             {
                 TIFFWarningExtR(tif, module,
                                 "Registering anonymous field with tag %" PRIu16
