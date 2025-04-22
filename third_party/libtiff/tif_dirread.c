@@ -4228,7 +4228,7 @@ int TIFFReadDirectory(TIFF *tif)
                    anonymous field structure */
                 const TIFFField *fld = _TIFFCreateAnonField(
                     tif, dp->tdir_tag, (TIFFDataType)dp->tdir_type);
-                if (fd == NULL || !_TIFFMergeFields(tif, fld, 1))
+                if (fld == NULL || !_TIFFMergeFields(tif, fld, 1))
                 {
                     TIFFWarningExtR(
                         tif, module,
@@ -5067,7 +5067,7 @@ int TIFFReadCustomDirectory(TIFF *tif, toff_t diroff,
                             dp->tdir_tag, dp->tdir_tag);
             const TIFFField *fld = _TIFFCreateAnonField(
                 tif, dp->tdir_tag, (TIFFDataType)dp->tdir_type);
-            if (fd == NULL || !_TIFFMergeFields(tif, fld, 1))
+            if (fld == NULL || !_TIFFMergeFields(tif, fld, 1))
             {
                 TIFFWarningExtR(tif, module,
                                 "Registering anonymous field with tag %" PRIu16
