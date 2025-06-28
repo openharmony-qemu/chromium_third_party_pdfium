@@ -3342,6 +3342,14 @@ int TIFFReadRGBATileExt(TIFF *tif, uint32_t col, uint32_t row, uint32_t *raster,
         return (0);
     }
 
+    if (col >= img.width || row >= img.height)
+    {
+        TIFFErrorExtR(tif, TIFFFileName(tif),
+                      "Invalid row/col passed to TIFFReadRGBATile().");
+        TIFFRGBAImageEnd(&img);
+        return (0);
+    }
+
     /*
      * The TIFFRGBAImageGet() function doesn't allow us to get off the
      * edge of the image, even to fill an otherwise valid tile.  So we
