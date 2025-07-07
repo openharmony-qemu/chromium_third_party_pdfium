@@ -10,6 +10,9 @@
 #include <iterator>
 #include <limits>
 #include <utility>
+#if BUILDFLAG(IS_OHOS)
+#include <hilog/log.h>
+#endif
 
 #include "build/build_config.h"
 #include "core/fxcrt/byteorder.h"
@@ -150,8 +153,12 @@ bool CFX_FolderFontInfo::EnumFontList(CFX_FontMapper* pMapper) {
 
 void CFX_FolderFontInfo::ScanPath(const ByteString& path) {
   std::unique_ptr<FX_Folder> handle = FX_Folder::OpenFolder(path);
-  if (!handle)
+  if (!handle) {
+#if BUILDFLAG(IS_OHOS)
+    OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "PDF", "Load font failed, path: %{public}s.\n", path.c_str());
+#endif
     return;
+  }
 
   ByteString filename;
   bool bFolder;
