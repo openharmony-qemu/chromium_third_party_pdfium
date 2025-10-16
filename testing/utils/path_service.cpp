@@ -81,6 +81,9 @@ bool PathService::GetExecutableDir(std::string* path) {
   path->resize(path_length - 1);
   if (_NSGetExecutablePath(&((*path)[0]), &path_length))
     return false;
+#elif defined(OSOHOS) // OSOHOS
+  *path = std::string(".");
+  return true;
 #else   // Linux
   static const char kProcSelfExe[] = "/proc/self/exe";
   char buf[PATH_MAX];
@@ -104,6 +107,10 @@ bool PathService::GetExecutableDir(std::string* path) {
 
 // static
 bool PathService::GetSourceDir(std::string* path) {
+#if defined(OSOHOS)
+  *path = "./src";
+  return true;
+#endif
   if (!GetExecutableDir(path))
     return false;
 
