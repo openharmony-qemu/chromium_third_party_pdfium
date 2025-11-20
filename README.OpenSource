@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "pdfium",
+        "License":"BSD-3-Clause",
+        "License File":"LICENSE",
+        "Version Number": "84a8011ec69d0e2de271c05be7d62979608040d9",
+        "Owner": "huamengzheng@huawei.com",
+        "Upstream URL": "https://chromium.googlesource.com/pdfium.git@84a8011ec69d0e2de271c05be7d62979608040d9",
+        "Description": "PDF 渲染引擎"
+    }
+]
