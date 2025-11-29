@@ -16,6 +16,10 @@
 #include "testing/allocator_shim_config.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "testing/chromium_support/discardable_memory_allocator.h"
+#endif
+
 // Can't use gtest-provided main since we need to create our own
 // testing environment which needs the executable path in order to
 // find the external V8 binary data files.
@@ -24,6 +28,9 @@ int main(int argc, char** argv) {
   pdfium::ConfigurePartitionAllocShimPartitionForTest();
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  chromium_support::InitializeDiscardableMemoryAllocator();
+#endif
   FX_InitializeMemoryAllocators();
 
 #ifdef PDF_ENABLE_V8

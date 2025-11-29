@@ -360,6 +360,13 @@ group("pdfium_embeddertest_deps") {
 test("pdfium_embeddertests") {
   testonly = true
   sources = [ "testing/embedder_test_main.cpp" ]
+  if (is_ohos) {
+    sources += [
+      "testing/chromium_support/discardable_memory_allocator.cc",
+      "testing/chromium_support/discardable_memory_allocator.h",
+    ]
+  }
+
   deps = [
     ":pdfium_embeddertest_deps",
     "core/fpdfapi/edit:embeddertests",
@@ -375,6 +382,13 @@ test("pdfium_embeddertests") {
     "//testing/gmock",
     "//testing/gtest",
   ]
+
+  if (is_ohos) {
+    deps += [
+      "//base/test:test_support",
+    ]
+  }
+
   include_dirs = [ "testing/gmock/include" ]
   configs += [ ":pdfium_core_config" ]
 
