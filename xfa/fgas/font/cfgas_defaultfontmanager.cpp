@@ -33,10 +33,10 @@ RetainPtr<CFGAS_GEFont> CFGAS_DefaultFontManager::GetFont(
   uint32_t dwStyle = 0;
   // TODO(dsinclair): Why doesn't this check the other flags?
   if (FontStyleIsForceBold(dwFontStyles)) {
-    dwStyle |= FXFONT_FORCE_BOLD;
+    dwStyle |= pdfium::kFontStyleForceBold;
   }
   if (FontStyleIsItalic(dwFontStyles)) {
-    dwStyle |= FXFONT_ITALIC;
+    dwStyle |= pdfium::kFontStyleItalic;
   }
   ByteStringView replace_view(pCurFont->pReplaceFont);
   while (!replace_view.IsEmpty()) {
@@ -64,8 +64,9 @@ RetainPtr<CFGAS_GEFont> CFGAS_DefaultFontManager::GetDefaultFont(
   CFGAS_FontMgr* pFontMgr = CFGAS_GEModule::Get()->GetFontMgr();
   RetainPtr<CFGAS_GEFont> pFont =
       pFontMgr->LoadFont(L"Arial Narrow", dwFontStyles, FX_CodePage::kFailure);
-  if (pFont)
+  if (pFont) {
     return pFont;
+  }
 
   return pFontMgr->LoadFont(nullptr, dwFontStyles, FX_CodePage::kFailure);
 }

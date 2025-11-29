@@ -144,7 +144,7 @@ source_set("fxge") {
     public_deps += [ "//skia" ]
   }
 
-  if (is_android || is_ohos) {
+  if (is_android) {
     sources += [
       "android/cfpf_skiadevicemodule.cpp",
       "android/cfpf_skiadevicemodule.h",
