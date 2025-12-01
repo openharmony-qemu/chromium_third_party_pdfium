@@ -94,6 +94,8 @@ int CheckPDFiumCApi() {
     CHK(FPDFAnnot_SetColor);
     CHK(FPDFAnnot_SetFlags);
     CHK(FPDFAnnot_SetFocusableSubtypes);
+    CHK(FPDFAnnot_SetFontColor);
+    CHK(FPDFAnnot_SetFormFieldFlags);
     CHK(FPDFAnnot_SetRect);
     CHK(FPDFAnnot_SetStringValue);
     CHK(FPDFAnnot_SetURI);
@@ -109,6 +111,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFAttachment_GetFile);
     CHK(FPDFAttachment_GetName);
     CHK(FPDFAttachment_GetStringValue);
+    CHK(FPDFAttachment_GetSubtype);
     CHK(FPDFAttachment_GetValueType);
     CHK(FPDFAttachment_HasKey);
     CHK(FPDFAttachment_SetFile);
@@ -176,9 +179,11 @@ int CheckPDFiumCApi() {
     CHK(FPDFFont_GetWeight);
     CHK(FPDFFormObj_CountObjects);
     CHK(FPDFFormObj_GetObject);
+    CHK(FPDFFormObj_RemoveObject);
     CHK(FPDFGlyphPath_CountGlyphSegments);
     CHK(FPDFGlyphPath_GetGlyphPathSegment);
     CHK(FPDFImageObj_GetBitmap);
+    CHK(FPDFImageObj_GetIccProfileDataDecoded);
     CHK(FPDFImageObj_GetImageDataDecoded);
     CHK(FPDFImageObj_GetImageDataRaw);
     CHK(FPDFImageObj_GetImageFilter);
@@ -212,6 +217,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFPageObj_GetDashCount);
     CHK(FPDFPageObj_GetDashPhase);
     CHK(FPDFPageObj_GetFillColor);
+    CHK(FPDFPageObj_GetIsActive);
     CHK(FPDFPageObj_GetLineCap);
     CHK(FPDFPageObj_GetLineJoin);
     CHK(FPDFPageObj_GetMark);

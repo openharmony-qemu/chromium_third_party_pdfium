@@ -17,7 +17,6 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_folder.h"
 #include "core/fxcrt/fx_system.h"
-#include "core/fxcrt/stl_util.h"
 #include "core/fxge/android/cfpf_skiafont.h"
 #include "core/fxge/android/cfpf_skiapathfont.h"
 #include "core/fxge/freetype/fx_freetype.h"
@@ -130,8 +129,9 @@ uint32_t SkiaGetCharset(FX_Charset charset) {
 uint32_t SkiaNormalizeFontName(ByteStringView family) {
   uint32_t hash_code = 0;
   for (unsigned char ch : family) {
-    if (ch == ' ' || ch == '-' || ch == ',')
+    if (ch == ' ' || ch == '-' || ch == ',') {
       continue;
+    }
     hash_code = 31 * hash_code + tolower(ch);
   }
   return hash_code;
@@ -170,7 +170,7 @@ bool SkiaMaybeArabic(ByteStringView facename) {
   return name.Contains("arabic");
 }
 
-constexpr auto kFPFSkiaFontCharsets = fxcrt::ToArray<const uint32_t>({
+constexpr auto kFPFSkiaFontCharsets = std::to_array<const uint32_t>({
     SKIACHARSET_Ansi,
     SKIACHARSET_EeasternEuropean,
     SKIACHARSET_Cyrillic,
@@ -335,8 +335,9 @@ CFPF_SkiaFont* CFPF_SkiaFontMgr::CreateFont(ByteStringView family_name,
   }
 
   auto font = std::make_unique<CFPF_SkiaFont>(this, best_font, charset);
-  if (!font->IsValid())
+  if (!font->IsValid()) {
     return nullptr;
+  }
 
   CFPF_SkiaFont* ret = font.get();
   family_font_map_[hash] = std::move(font);
@@ -358,8 +359,9 @@ RetainPtr<CFX_Face> CFPF_SkiaFontMgr::GetFontFace(ByteStringView path,
   args.pathname = const_cast<FT_String*>(path.unterminated_c_str());
   RetainPtr<CFX_Face> face =
       CFX_Face::Open(ft_library_.get(), &args, face_index);
-  if (!face)
+  if (!face) {
     return nullptr;
+  }
 
   face->SetPixelSize(0, 64);
   return face;
@@ -367,20 +369,23 @@ RetainPtr<CFX_Face> CFPF_SkiaFontMgr::GetFontFace(ByteStringView path,
 
 void CFPF_SkiaFontMgr::ScanPath(const ByteString& path) {
   std::unique_ptr<FX_Folder> handle = FX_Folder::OpenFolder(path);
-  if (!handle)
+  if (!handle) {
     return;
+  }
 
   ByteString filename;
   bool is_folder = false;
   while (handle->GetNextFile(&filename, &is_folder)) {
     if (is_folder) {
-      if (filename == "." || filename == "..")
+      if (filename == "." || filename == "..") {
         continue;
+      }
     } else {
       ByteString ext = filename.Last(4);
       ext.MakeLower();
-      if (ext != ".ttf" && ext != ".ttc" && ext != ".otf")
+      if (ext != ".ttf" && ext != ".ttc" && ext != ".otf") {
         continue;
+      }
     }
     ByteString fullpath(path);
     fullpath += "/";
@@ -395,8 +400,9 @@ void CFPF_SkiaFontMgr::ScanPath(const ByteString& path) {
 
 void CFPF_SkiaFontMgr::ScanFile(const ByteString& file) {
   RetainPtr<CFX_Face> face = GetFontFace(file.AsStringView(), 0);
-  if (!face)
+  if (!face) {
     return;
+  }
 
   font_faces_.push_back(ReportFace(face, file));
 }
@@ -406,13 +412,13 @@ std::unique_ptr<CFPF_SkiaPathFont> CFPF_SkiaFontMgr::ReportFace(
     const ByteString& file) {
   uint32_t style = 0;
   if (face->IsBold()) {
-    style |= FXFONT_FORCE_BOLD;
+    style |= pdfium::kFontStyleForceBold;
   }
   if (face->IsItalic()) {
-    style |= FXFONT_ITALIC;
+    style |= pdfium::kFontStyleItalic;
   }
   if (face->IsFixedWidth()) {
-    style |= FXFONT_FIXED_PITCH;
+    style |= pdfium::kFontStyleFixedPitch;
   }
 
   uint32_t charset = SKIACHARSET_Default;
@@ -420,7 +426,7 @@ std::unique_ptr<CFPF_SkiaPathFont> CFPF_SkiaFontMgr::ReportFace(
       face->GetOs2CodePageRange();
   if (code_page_range.has_value()) {
     if (code_page_range.value()[0] & (1 << 31)) {
-      style |= FXFONT_SYMBOLIC;
+      style |= pdfium::kFontStyleSymbolic;
     }
     charset |= SkiaGetFaceCharset(code_page_range.value()[0]);
   }
@@ -429,7 +435,7 @@ std::unique_ptr<CFPF_SkiaPathFont> CFPF_SkiaFontMgr::ReportFace(
   if (panose.has_value() && panose.value()[0] == 2) {
     uint8_t serif = panose.value()[1];
     if ((serif > 1 && serif < 10) || serif > 13) {
-      style |= FXFONT_SERIF;
+      style |= pdfium::kFontStyleSerif;
     }
   }
 

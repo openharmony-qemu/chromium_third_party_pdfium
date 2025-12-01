@@ -67,9 +67,6 @@ class CFX_Face final : public Retainable, public Observable {
   uint16_t GetUnitsPerEm() const;
   int16_t GetAscender() const;
   int16_t GetDescender() const;
-#if BUILDFLAG(IS_ANDROID)
-  int16_t GetHeight() const;
-#endif
 
   pdfium::span<uint8_t> GetData() const;
 
@@ -123,8 +120,8 @@ class CFX_Face final : public Retainable, public Observable {
   bool CanEmbed();
 #endif
 
-  FXFT_FaceRec* GetRec() { return m_pRec.get(); }
-  const FXFT_FaceRec* GetRec() const { return m_pRec.get(); }
+  FXFT_FaceRec* GetRec() { return rec_.get(); }
+  const FXFT_FaceRec* GetRec() const { return rec_.get(); }
 
  private:
   CFX_Face(FXFT_FaceRec* pRec, RetainPtr<Retainable> pDesc);
@@ -132,8 +129,8 @@ class CFX_Face final : public Retainable, public Observable {
 
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
 
-  ScopedFXFTFaceRec const m_pRec;
-  RetainPtr<Retainable> const m_pDesc;
+  ScopedFXFTFaceRec const rec_;
+  RetainPtr<Retainable> const desc_;
 };
 
 #endif  // CORE_FXGE_CFX_FACE_H_

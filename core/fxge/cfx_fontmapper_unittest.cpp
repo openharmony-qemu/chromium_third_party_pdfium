@@ -28,7 +28,7 @@ class MockSystemFontInfo : public SystemFontInfoIface {
   ~MockSystemFontInfo() override = default;
 
   // SystemFontInfoIface:
-  MOCK_METHOD(bool, EnumFontList, (CFX_FontMapper*), (override));
+  MOCK_METHOD(void, EnumFontList, (CFX_FontMapper*), (override));
   MOCK_METHOD(void*,
               MapFont,
               (int, bool, FX_Charset, int, const ByteString&),
@@ -200,8 +200,8 @@ TEST_F(CFXFontMapperSystemFontInfoTest, RawBytesForIndexFailToGetData) {
 // Regression test for crbug.com/1372234 - should not crash.
 TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedTTCFaceFailToGetData) {
   void* const kFontHandle = reinterpret_cast<void*>(12345);
-  constexpr size_t kTtcSize = 1024;
-  constexpr size_t kDataSize = 2;
+  static constexpr size_t kTtcSize = 1024;
+  static constexpr size_t kDataSize = 2;
 
   {
     InSequence s;
@@ -222,10 +222,10 @@ TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedTTCFaceFailToGetData) {
 // Regression test for crbug.com/1372234 - should not crash.
 TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedFaceFailToGetData) {
   void* const kFontHandle = reinterpret_cast<void*>(12345);
-  constexpr char kSubstName[] = "dummy_font";
-  constexpr int kWeight = 400;
-  constexpr bool kItalic = false;
-  constexpr size_t kDataSize = 2;
+  static constexpr char kSubstName[] = "dummy_font";
+  static constexpr int kWeight = 400;
+  static constexpr bool kItalic = false;
+  static constexpr size_t kDataSize = 2;
 
   EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
       .WillOnce(Return(0));
