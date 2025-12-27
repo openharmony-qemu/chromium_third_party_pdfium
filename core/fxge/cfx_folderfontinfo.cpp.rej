@@ -1,0 +1,16 @@
+--- src/third_party/pdfium/core/fxge/cfx_folderfontinfo.cpp
++++ src/third_party/pdfium/core/fxge/cfx_folderfontinfo.cpp
+@@ -9,10 +9,13 @@
+ #include <algorithm>
+ #include <array>
+ #include <iterator>
+ #include <limits>
+ #include <utility>
++#if BUILDFLAG(IS_OHOS)
++#include <hilog/log.h>
++#endif
+ 
+ #include "build/build_config.h"
+ #include "core/fxcrt/byteorder.h"
+ #include "core/fxcrt/check_op.h"
+ #include "core/fxcrt/compiler_specific.h"

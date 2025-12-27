@@ -353,7 +353,7 @@ class FPDFFormFillComboBoxFormEmbedderTest
     ClickOnFormFieldAtPoint(point);
 
     // Calculate to Y-coordinate of dropdown option to be selected.
-    static constexpr double kChoiceHeight = 15;
+    constexpr double kChoiceHeight = 15;
     CFX_PointF option_point = point;
     option_point.y -= kChoiceHeight * (item_index + 1);
 
@@ -719,7 +719,7 @@ TEST_F(FPDFFormFillEmbedderTest, GetFocusedAnnotation) {
   EXPECT_FALSE(FORM_GetFocusedAnnot(form_handle(), nullptr, &annot));
 
   const CFX_PointF right_bottom_annot_point(410.0f, 210.0f);
-  static constexpr int kExpectedAnnotIndex = 3;
+  constexpr int kExpectedAnnotIndex = 3;
 
   for (size_t i = 0; i < pages.size(); ++i) {
     // Invoke click on the form field to bring it to focus.
@@ -760,7 +760,7 @@ TEST_F(FPDFFormFillEmbedderTest, SetFocusedAnnotation) {
   EXPECT_FALSE(FORM_SetFocusedAnnot(nullptr, annot));
   EXPECT_FALSE(FORM_SetFocusedAnnot(form_handle(), nullptr));
 
-  static constexpr int kExpectedAnnotIndex = 2;
+  constexpr int kExpectedAnnotIndex = 2;
 
   for (size_t i = 0; i < pages.size(); ++i) {
     // Setting focus on an annotation on page i.
@@ -1725,9 +1725,9 @@ TEST_F(FPDFFormFillEmbedderTest, HasFormFieldAtPointForXFADoc) {
             FPDFPage_HasFormFieldAtPoint(form_handle(), page.get(), 612, 792));
 
 #ifdef PDF_ENABLE_XFA
-  static constexpr int kExpectedFieldType = FPDF_FORMFIELD_XFA_TEXTFIELD;
+  constexpr int kExpectedFieldType = FPDF_FORMFIELD_XFA_TEXTFIELD;
 #else
-  static constexpr int kExpectedFieldType = -1;
+  constexpr int kExpectedFieldType = -1;
 #endif
   EXPECT_EQ(kExpectedFieldType,
             FPDFPage_HasFormFieldAtPoint(form_handle(), page.get(), 50, 30));
@@ -3572,9 +3572,9 @@ class FPDFFormFillActionUriTest : public EmbedderTest {
     ASSERT_TRUE(page_);
 
     // Set Widget and Link as supported tabbable annots.
-    static constexpr FPDF_ANNOTATION_SUBTYPE kFocusableSubtypes[] = {
-        FPDF_ANNOT_WIDGET, FPDF_ANNOT_LINK};
-    static constexpr size_t kSubtypeCount = std::size(kFocusableSubtypes);
+    constexpr FPDF_ANNOTATION_SUBTYPE kFocusableSubtypes[] = {FPDF_ANNOT_WIDGET,
+                                                              FPDF_ANNOT_LINK};
+    constexpr size_t kSubtypeCount = std::size(kFocusableSubtypes);
     ASSERT_TRUE(FPDFAnnot_SetFocusableSubtypes(
         form_handle(), kFocusableSubtypes, kSubtypeCount));
   }
