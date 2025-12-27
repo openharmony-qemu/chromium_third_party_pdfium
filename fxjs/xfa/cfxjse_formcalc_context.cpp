@@ -6,6 +6,7 @@
 
 #include "fxjs/xfa/cfxjse_formcalc_context.h"
 
+#include <ctype.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -27,7 +28,6 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_random.h"
 #include "core/fxcrt/fx_safe_types.h"
-#include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/widetext_buffer.h"
@@ -512,7 +512,7 @@ bool IsWhitespace(char c) {
 }
 
 bool IsPartOfNumber(char ch) {
-  return FXSYS_IsDecimalDigit(ch) || ch == '-' || ch == '.';
+  return isdigit(ch) || ch == '-' || ch == '.';
 }
 
 bool IsPartOfNumberW(wchar_t ch) {
@@ -528,13 +528,13 @@ ByteString GUIDString(bool bSeparator) {
   ByteString bsGUID;
   {
     // Span's lifetime must end before ReleaseBuffer() below.
-    pdfium::span<char> guid_span = bsGUID.GetBuffer(40);
+    pdfium::span<char> pBuf = bsGUID.GetBuffer(40);
     size_t out_index = 0;
     for (size_t i = 0; i < 16; ++i, out_index += 2) {
       if (bSeparator && (i == 4 || i == 6 || i == 8 || i == 10)) {
-        guid_span[out_index++] = L'-';
+        pBuf[out_index++] = L'-';
       }
-      FXSYS_IntToTwoHexChars(data[i], guid_span.subspan(out_index).first<2u>());
+      FXSYS_IntToTwoHexChars(data[i], &pBuf[out_index]);
     }
   }
   bsGUID.ReleaseBuffer(bSeparator ? 36 : 32);
@@ -1105,8 +1105,8 @@ int32_t ValueToInteger(v8::Isolate* pIsolate, v8::Local<v8::Value> arg) {
   }
 
   if (fxv8::IsString(extracted)) {
-    ByteString value = fxv8::ReentrantToByteStringHelper(pIsolate, extracted);
-    return StringToInt(value.AsStringView());
+    ByteString bsValue = fxv8::ReentrantToByteStringHelper(pIsolate, extracted);
+    return FXSYS_atoi(bsValue.c_str());
   }
 
   return fxv8::ReentrantToInt32Helper(pIsolate, extracted);
@@ -3300,7 +3300,7 @@ void CFXJSE_FormCalcContext::UnitValue(
       }
 
       while (uVal < bsUnitTemp.GetLength()) {
-        if (!FXSYS_IsDecimalDigit(pChar[uVal]) && pChar[uVal] != '.') {
+        if (!isdigit(pChar[uVal]) && pChar[uVal] != '.') {
           break;
         }
         ++uVal;
@@ -5274,7 +5274,7 @@ bool CFXJSE_FormCalcContext::IsIsoDateFormat(ByteStringView bsData,
 
   std::array<char, 5> szYear = {};
   for (int32_t i = 0; i < 4; ++i) {
-    if (!FXSYS_IsDecimalDigit(pData[i])) {
+    if (!isdigit(pData[i])) {
       return false;
     }
     szYear[i] = pData[i];
@@ -5286,8 +5286,7 @@ bool CFXJSE_FormCalcContext::IsIsoDateFormat(ByteStringView bsData,
 
   int32_t iStyle = pData[4] == '-' ? 1 : 0;
   size_t iPosOff = iStyle == 0 ? 4 : 5;
-  if (!FXSYS_IsDecimalDigit(pData[iPosOff]) ||
-      !FXSYS_IsDecimalDigit(pData[iPosOff + 1])) {
+  if (!isdigit(pData[iPosOff]) || !isdigit(pData[iPosOff + 1])) {
     return false;
   }
 
@@ -5310,8 +5309,7 @@ bool CFXJSE_FormCalcContext::IsIsoDateFormat(ByteStringView bsData,
       return true;
     }
   }
-  if (!FXSYS_IsDecimalDigit(pData[iPosOff]) ||
-      !FXSYS_IsDecimalDigit(pData[iPosOff + 1])) {
+  if (!isdigit(pData[iPosOff]) || !isdigit(pData[iPosOff + 1])) {
     return false;
   }
 
@@ -5345,7 +5343,7 @@ bool CFXJSE_FormCalcContext::IsIsoTimeFormat(ByteStringView bsData) {
   size_t iZone = 0;
   size_t i = 0;
   while (i < pData.size()) {
-    if (!FXSYS_IsDecimalDigit(pData[i]) && pData[i] != ':') {
+    if (!isdigit(pData[i]) && pData[i] != ':') {
       iZone = i;
       break;
     }

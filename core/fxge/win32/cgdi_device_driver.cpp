@@ -393,7 +393,7 @@ int CGdiDeviceDriver::GetDeviceCaps(int caps_id) const {
     case FXDC_RENDER_CAPS:
       return render_caps_;
     default:
-      NOTREACHED();
+      NOTREACHED_NORETURN();
   }
 }
 
@@ -566,13 +566,13 @@ FX_RECT CGdiDeviceDriver::GetClipBox() const {
 bool CGdiDeviceDriver::MultiplyAlpha(float alpha) {
   // Not implemented. All callers are using `CFX_DIBitmap`-backed raster devices
   // anyway.
-  NOTREACHED();
+  NOTREACHED_NORETURN();
 }
 
 bool CGdiDeviceDriver::MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) {
   // Not implemented. All callers are using `CFX_DIBitmap`-backed raster devices
   // anyway.
-  NOTREACHED();
+  NOTREACHED_NORETURN();
 }
 
 void CGdiDeviceDriver::DrawLine(float x1, float y1, float x2, float y2) {
