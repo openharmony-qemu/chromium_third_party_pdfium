@@ -281,7 +281,7 @@ fxge::FontEncoding ToFontEncoding(uint32_t ft_encoding) {
     case FT_ENCODING_WANSUNG:
       return fxge::FontEncoding::kWansung;
   }
-  NOTREACHED();
+  NOTREACHED_NORETURN();
 }
 #if defined(PDF_ENABLE_XFA)
 unsigned long FTStreamRead(FXFT_StreamRec* stream,

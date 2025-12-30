@@ -3506,9 +3506,9 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithKeyboardShortcut) {
 
   // Select all with the keyboard shortcut.
 #if BUILDFLAG(IS_APPLE)
-  static constexpr int kCorrectModifier = FWL_EVENTFLAG_MetaKey;
+  constexpr int kCorrectModifier = FWL_EVENTFLAG_MetaKey;
 #else
-  static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
+  constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
 #endif
   FORM_OnChar(form_handle(), page(), pdfium::ascii::kControlA,
               kCorrectModifier);
@@ -3520,9 +3520,9 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithKeyboardShortcut) {
 
   // Select all with the keyboard shortcut using the wrong modifier key.
 #if BUILDFLAG(IS_APPLE)
-  static constexpr int kWrongModifier = FWL_EVENTFLAG_ControlKey;
+  constexpr int kWrongModifier = FWL_EVENTFLAG_ControlKey;
 #else
-  static constexpr int kWrongModifier = FWL_EVENTFLAG_MetaKey;
+  constexpr int kWrongModifier = FWL_EVENTFLAG_MetaKey;
 #endif
   FORM_OnChar(form_handle(), page(), pdfium::ascii::kControlA, kWrongModifier);
   EXPECT_EQ(Selection(), "");

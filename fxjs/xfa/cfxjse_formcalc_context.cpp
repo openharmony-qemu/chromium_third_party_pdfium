@@ -5359,8 +5359,7 @@ bool CFXJSE_FormCalcContext::IsIsoTimeFormat(ByteStringView bsData) {
   while (index + 1 < iZone) {
     szBuffer[0] = pData[index];
     szBuffer[1] = pData[index + 1];
-    if (!FXSYS_IsDecimalDigit(szBuffer[0]) ||
-        !FXSYS_IsDecimalDigit(szBuffer[1])) {
+    if (!isdigit(szBuffer[0]) || !isdigit(szBuffer[1])) {
       return false;
     }
     int32_t value = FXSYS_atoi(szBuffer);
@@ -5399,7 +5398,7 @@ bool CFXJSE_FormCalcContext::IsIsoTimeFormat(ByteStringView bsData) {
     std::array<char, kSubSecondLength + 1> szMilliSeconds = {};
     for (int j = 0; j < kSubSecondLength; ++j) {
       char c = pData[index + j];
-      if (!FXSYS_IsDecimalDigit(c)) {
+      if (!isdigit(c)) {
         return false;
       }
       szMilliSeconds[j] = c;
@@ -5425,8 +5424,7 @@ bool CFXJSE_FormCalcContext::IsIsoTimeFormat(ByteStringView bsData) {
   while (index + 1 < pData.size()) {
     szBuffer[0] = pData[index];
     szBuffer[1] = pData[index + 1];
-    if (!FXSYS_IsDecimalDigit(szBuffer[0]) ||
-        !FXSYS_IsDecimalDigit(szBuffer[1])) {
+    if (!isdigit(szBuffer[0]) || !isdigit(szBuffer[1])) {
       return false;
     }
     int32_t value = FXSYS_atoi(szBuffer);
