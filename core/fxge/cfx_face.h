@@ -72,7 +72,7 @@ class CFX_Face final : public Retainable, public Observable {
       const RetainPtr<IFX_SeekableReadStream>& font_stream,
       FT_Long face_index);
 #endif
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   static RetainPtr<CFX_Face> OpenFromFilePath(FT_Library library,
                                               ByteStringView path,
                                               int32_t face_index);

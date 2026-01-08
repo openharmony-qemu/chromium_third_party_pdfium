@@ -357,7 +357,7 @@ RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
 }
 #endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
                                                ByteStringView path,
                                                int32_t face_index) {
