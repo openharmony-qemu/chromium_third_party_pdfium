@@ -171,7 +171,7 @@ private:
 
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
-#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
+#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_OHOS)
   static RetainPtr<CFX_Face> Open(FT_Library library,
                                   const FT_Open_Args* args,
                                   FT_Long face_index);
