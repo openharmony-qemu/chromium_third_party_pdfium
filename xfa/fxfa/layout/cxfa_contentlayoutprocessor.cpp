@@ -90,7 +90,7 @@ void UpdateWidgetSize(CXFA_ContentLayoutItem* pLayoutItem,
       break;
     }
     default:
-      NOTREACHED_NORETURN();
+      NOTREACHED();
   }
 }
 

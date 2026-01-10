@@ -6,8 +6,6 @@
 
 #include "core/fpdfapi/page/cpdf_streamparser.h"
 
-#include <ctype.h>
-
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -612,8 +610,9 @@ DataVector<uint8_t> CPDF_StreamParser::ReadHexString() {
       break;
     }
 
-    if (!isxdigit(ch))
+    if (!FXSYS_IsHexDigit(ch)) {
       continue;
+    }
 
     int val = FXSYS_HexCharToInt(ch);
     if (bFirst) {

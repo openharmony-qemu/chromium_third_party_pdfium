@@ -6,7 +6,6 @@
 
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
 
-#include <ctype.h>
 #include <limits.h>
 #include <stddef.h>
 
@@ -230,7 +229,7 @@ DataAndBytesConsumed HexDecode(pdfium::span<const uint8_t> src_span) {
       ++i;
       break;
     }
-    if (!isxdigit(ch)) {
+    if (!FXSYS_IsHexDigit(ch)) {
       continue;
     }
 

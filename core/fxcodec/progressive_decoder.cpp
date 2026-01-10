@@ -855,7 +855,7 @@ void ProgressiveDecoder::SetTransMethod() {
     case FXDIB_Format::k1bppRgb:
     case FXDIB_Format::k8bppMask:
     case FXDIB_Format::k8bppRgb:
-      NOTREACHED_NORETURN();
+      NOTREACHED();
     case FXDIB_Format::kBgr: {
       switch (src_format_) {
         case FXCodec_Invalid:
@@ -911,7 +911,7 @@ void ProgressiveDecoder::SetTransMethod() {
     case FXDIB_Format::kBgraPremul:
       // TODO(crbug.com/355630556): Consider adding support for
       // `FXDIB_Format::kBgraPremul`
-      NOTREACHED_NORETURN();
+      NOTREACHED();
 #endif
   }
 }

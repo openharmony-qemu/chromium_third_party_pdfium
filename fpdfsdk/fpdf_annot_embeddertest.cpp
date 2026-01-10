@@ -669,7 +669,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveLinkAnnotation) {
   }
   EXPECT_EQ(0, FPDFPage_GetAnnotCount(page.get()));
 
-  constexpr char kUri[] = "https://pdfium.org/";
+  static constexpr char kUri[] = "https://pdfium.org/";
 
   {
     // Add a link annotation to the page and set its URI.
@@ -1423,7 +1423,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
     CompareBitmap(bitmap.get(), 595, 842, AnnotationStampWithApChecksum());
   }
 
-  constexpr int kBitmapSize = 200;
+  static constexpr int kBitmapSize = 200;
   FPDF_BITMAP image_bitmap;
 
   {
@@ -3217,7 +3217,7 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
   // Make links and highlights focusable.
   static constexpr FPDF_ANNOTATION_SUBTYPE kSubTypes[] = {FPDF_ANNOT_LINK,
                                                           FPDF_ANNOT_HIGHLIGHT};
-  constexpr int kSubTypesCount = std::size(kSubTypes);
+  static constexpr int kSubTypesCount = std::size(kSubTypes);
   ASSERT_TRUE(
       FPDFAnnot_SetFocusableSubtypes(form_handle(), kSubTypes, kSubTypesCount));
   ASSERT_EQ(kSubTypesCount, FPDFAnnot_GetFocusableSubtypesCount(form_handle()));
@@ -3285,7 +3285,7 @@ TEST_F(FPDFAnnotEmbedderTest, GetLinkFromAnnotation) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   {
-    constexpr char kExpectedResult[] =
+    static constexpr char kExpectedResult[] =
         "https://cs.chromium.org/chromium/src/third_party/pdfium/public/"
         "fpdf_text.h";
 

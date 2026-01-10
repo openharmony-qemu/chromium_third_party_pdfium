@@ -90,7 +90,7 @@ const CPDF_Dictionary* CPDF_Object::GetDictInternal() const {
 }
 
 void CPDF_Object::SetString(const ByteString& str) {
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 CPDF_Array* CPDF_Object::AsMutableArray() {

@@ -105,35 +105,115 @@ void RecordPageObjectResourceUsage(const CPDF_PageObject* page_object,
   }
 }
 
-void RemoveUnusedResources(RetainPtr<CPDF_Dictionary> resources_dict,
-                           const ResourcesMap& resources_in_use) {
-  // TODO(thestig): Remove other unused resource types:
-  for (const char* resource_key : kResourceKeys) {
-    RetainPtr<CPDF_Dictionary> resource_dict =
-        resources_dict->GetMutableDictFor(resource_key);
-    if (!resource_dict) {
+CPDF_PageObjectHolder::RemovedResourceMap RemoveUnusedResources(
+    CPDF_Dictionary* resource_dict,
+    const std::vector<ByteString>& keys,
+    const std::set<ByteString>* resource_in_use_of_current_type) {
+  CPDF_PageObjectHolder::RemovedResourceMap removed_resource_map;
+  for (const ByteString& key : keys) {
+    if (resource_in_use_of_current_type &&
+        pdfium::Contains(*resource_in_use_of_current_type, key)) {
       continue;
     }
 
-    std::vector<ByteString> keys;
-    {
-      CPDF_DictionaryLocker resource_dict_locker(resource_dict);
-      for (auto& it : resource_dict_locker) {
-        keys.push_back(it.first);
-      }
-    }
+    removed_resource_map[key] = resource_dict->RemoveFor(key.AsStringView());
+  }
+  return removed_resource_map;
+}
 
-    auto it = resources_in_use.find(resource_key);
+void SaveUnusedResources(
+    CPDF_PageObjectHolder::RemovedResourceMap& removed_resource_map,
+    CPDF_PageObjectHolder::RemovedResourceMap& saved_resource_map) {
+  for (auto& entry : removed_resource_map) {
+    saved_resource_map[entry.first] = std::move(entry.second);
+  }
+}
+
+std::vector<ByteString> FindKeysToRestore(
+    const std::vector<ByteString>& keys,
+    const std::set<ByteString>* resource_in_use_of_current_type,
+    const CPDF_PageObjectHolder::RemovedResourceMap& saved_resource_map) {
+  if (!resource_in_use_of_current_type) {
+    return {};
+  }
+
+  std::vector<ByteString> missing_keys;
+  for (const ByteString& key : *resource_in_use_of_current_type) {
+    if (!pdfium::Contains(keys, key)) {
+      missing_keys.push_back(key);
+    }
+  }
+
+  std::vector<ByteString> keys_to_restore;
+  for (const ByteString& key : missing_keys) {
+    if (pdfium::Contains(saved_resource_map, key)) {
+      keys_to_restore.push_back(key);
+    }
+  }
+  return keys_to_restore;
+}
+
+// `keys_to_restore` entries must exist in `saved_resource_map`.
+void RestoreUsedResources(
+    CPDF_Dictionary* resource_dict,
+    const std::vector<ByteString>& keys_to_restore,
+    CPDF_PageObjectHolder::RemovedResourceMap& saved_resource_map) {
+  for (const ByteString& key : keys_to_restore) {
+    auto node = saved_resource_map.extract(key);
+    CHECK(!node.empty());
+    resource_dict->SetFor(node.key(), std::move(node.mapped()));
+  }
+}
+
+void RemoveOrRestoreUnusedResources(
+    RetainPtr<CPDF_Dictionary> resources_dict,
+    const ResourcesMap& resources_in_use,
+    CPDF_PageObjectHolder::AllRemovedResourcesMap& all_removed_resources_map) {
+  for (const char* resource_key : kResourceKeys) {
+    auto resources_in_use_it = resources_in_use.find(resource_key);
     const std::set<ByteString>* resource_in_use_of_current_type =
-        it != resources_in_use.end() ? &it->second : nullptr;
-    for (const ByteString& key : keys) {
-      if (resource_in_use_of_current_type &&
-          pdfium::Contains(*resource_in_use_of_current_type, key)) {
-        continue;
-      }
+        resources_in_use_it != resources_in_use.end()
+            ? &resources_in_use_it->second
+            : nullptr;
 
-      resource_dict->RemoveFor(key.AsStringView());
+    RetainPtr<CPDF_Dictionary> current_resource_dict =
+        resources_dict->GetMutableDictFor(resource_key);
+    if (!current_resource_dict && !resource_in_use_of_current_type) {
+      continue;
     }
+
+    const std::vector<ByteString> keys = current_resource_dict->GetKeys();
+    CPDF_PageObjectHolder::RemovedResourceMap removed_resource_map =
+        RemoveUnusedResources(current_resource_dict, keys,
+                              resource_in_use_of_current_type);
+    if (!removed_resource_map.empty()) {
+      // Note that this may create a new entry in `all_removed_resources_map`.
+      // Only do this if `removed_resource_map` is not empty.
+      SaveUnusedResources(removed_resource_map,
+                          all_removed_resources_map[resource_key]);
+    }
+
+    // Restore in-use objects if possible. To do so, first see if there is a
+    // saved resource map to restore from.
+    auto saved_resource_map_it = all_removed_resources_map.find(resource_key);
+    if (saved_resource_map_it == all_removed_resources_map.end()) {
+      continue;
+    }
+
+    auto& saved_resource_map = saved_resource_map_it->second;
+    std::vector<ByteString> keys_to_restore = FindKeysToRestore(
+        keys, resource_in_use_of_current_type, saved_resource_map);
+    if (keys_to_restore.empty()) {
+      continue;
+    }
+
+    // Create the dictionary if needed, so there is a place to restore to.
+    if (!current_resource_dict) {
+      current_resource_dict =
+          resources_dict->SetNewFor<CPDF_Dictionary>(resource_key);
+    }
+    RestoreUsedResources(current_resource_dict, keys_to_restore,
+                         saved_resource_map);
   }
 }
 
@@ -239,7 +319,8 @@ void CloneResourcesDictEntries(CPDF_Document* doc,
 CPDF_PageContentGenerator::CPDF_PageContentGenerator(
     CPDF_PageObjectHolder* pObjHolder)
     : obj_holder_(pObjHolder), document_(pObjHolder->GetDocument()) {
-  // Copy all page objects, even if they are inactive.
+  // Copy all page objects, even if they are inactive. They are needed in
+  // GenerateModifiedStreams() below.
   for (const auto& pObj : *pObjHolder) {
     page_objects_.emplace_back(pObj.get());
   }
@@ -424,7 +505,8 @@ void CPDF_PageContentGenerator::UpdateResourcesDict() {
     seen_resources["ExtGState"].insert(default_graphics_name_);
   }
 
-  RemoveUnusedResources(std::move(resources), seen_resources);
+  RemoveOrRestoreUnusedResources(std::move(resources), seen_resources,
+                                 obj_holder_->all_removed_resources_map());
 }
 
 ByteString CPDF_PageContentGenerator::RealizeResource(
@@ -438,21 +520,34 @@ ByteString CPDF_PageContentGenerator::RealizeResource(
         obj_holder_->GetResources()->GetObjNum());
   }
 
-  RetainPtr<CPDF_Dictionary> pResList =
+  RetainPtr<CPDF_Dictionary> resource_dict =
       obj_holder_->GetMutableResources()->GetOrCreateDictFor(type);
+  const auto& all_removed_resources_map =
+      obj_holder_->all_removed_resources_map();
+  auto it = all_removed_resources_map.find(type);
+  const CPDF_PageObjectHolder::RemovedResourceMap* removed_resource_map =
+      it != all_removed_resources_map.end() ? &it->second : nullptr;
   ByteString name;
   int idnum = 1;
   while (true) {
     name = ByteString::Format("FX%c%d", type[0], idnum);
-    if (!pResList->KeyExist(name.AsStringView()))
-      break;
+    // Avoid name collisions with existing `resource_dict` entries.
+    if (resource_dict->KeyExist(name.AsStringView())) {
+      idnum++;
+      continue;
+    }
 
-    idnum++;
+    // Also avoid collisions with entries in `removed_resource_map`, since those
+    // entries may move back into `resource_dict`.
+    if (removed_resource_map && pdfium::Contains(*removed_resource_map, name)) {
+      idnum++;
+      continue;
+    }
+
+    resource_dict->SetNewFor<CPDF_Reference>(name, document_,
+                                             pResource->GetObjNum());
+    return name;
   }
-
-  pResList->SetNewFor<CPDF_Reference>(name, document_,
-                                           pResource->GetObjNum());
-  return name;
 }
 
 bool CPDF_PageContentGenerator::ProcessPageObjects(fxcrt::ostringstream* buf) {
@@ -529,7 +624,7 @@ const CPDF_ContentMarks* CPDF_PageContentGenerator::ProcessContentMarks(
         break;
       }
       case CPDF_ContentMarkItem::kNone:
-        NOTREACHED_NORETURN();
+        NOTREACHED();
     }
 
     // Write BDC (begin dictionary content) operator.
@@ -767,7 +862,7 @@ void CPDF_PageContentGenerator::ProcessGraphics(fxcrt::ostringstream* buf,
           *buf << " W* ";
           break;
         case CFX_FillRenderOptions::FillType::kNoFill:
-          NOTREACHED_NORETURN();
+          NOTREACHED();
       }
 
       // Use a no-op path-painting operator to terminate the path without

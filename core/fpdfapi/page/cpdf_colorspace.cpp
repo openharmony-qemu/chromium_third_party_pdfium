@@ -440,7 +440,7 @@ class StockColorSpaces {
     if (family == CPDF_ColorSpace::Family::kPattern) {
       return pattern_;
     }
-    NOTREACHED_NORETURN();
+    NOTREACHED();
   }
 
  private:
@@ -600,7 +600,7 @@ uint32_t CPDF_ColorSpace::ComponentsForFamily(Family family) {
     case Family::kDeviceCMYK:
       return 4;
     default:
-      NOTREACHED_NORETURN();
+      NOTREACHED();
   }
 }
 
@@ -1119,7 +1119,7 @@ RetainPtr<CPDF_ColorSpace> CPDF_ICCBasedCS::GetStockAlternateProfile(
   if (nComponents == 4) {
     return GetStockCS(Family::kDeviceCMYK);
   }
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 // static

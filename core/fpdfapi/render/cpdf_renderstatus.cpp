@@ -367,7 +367,7 @@ void CPDF_RenderStatus::DrawObjWithBackground(CPDF_PageObject* pObj,
                                 buffer.GetMatrix());
   buffer.OutputToDevice();
 #else
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 #endif
 }
 
@@ -860,11 +860,11 @@ bool CPDF_RenderStatus::ProcessText(CPDF_TextObject* textobj,
       case TextRenderingMode::MODE_INVISIBLE:
         // Already handled above, but the compiler is not smart enough to
         // realize it.
-        NOTREACHED_NORETURN();
+        NOTREACHED();
       case TextRenderingMode::MODE_CLIP:
         return true;
       case TextRenderingMode::MODE_UNKNOWN:
-        NOTREACHED_NORETURN();
+        NOTREACHED();
     }
   }
   FX_ARGB stroke_argb = 0;
@@ -1310,7 +1310,7 @@ void CPDF_RenderStatus::CompositeDIBitmap(
         return;
       }
 #else
-      NOTREACHED_NORETURN();
+      NOTREACHED();
 #endif
     } else {
       if (alpha != 1.0f) {
@@ -1364,7 +1364,7 @@ void CPDF_RenderStatus::CompositeDIBitmap(
                               bitmap, mask_argb, left, top, blend_mode, nullptr,
                               false);
 #else
-        NOTREACHED_NORETURN();
+        NOTREACHED();
 #endif
       } else {
         pClone->CompositeBitmap(0, 0, pClone->GetWidth(), pClone->GetHeight(),
@@ -1400,7 +1400,7 @@ void CPDF_RenderStatus::CompositeDIBitmap(
                             std::move(bitmap), mask_argb, 0, 0, blend_mode,
                             nullptr, false);
 #else
-    NOTREACHED_NORETURN();
+    NOTREACHED();
 #endif
   } else {
     backdrop->CompositeBitmap(left - bbox.left, top - bbox.top, width, height,

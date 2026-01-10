@@ -482,7 +482,7 @@ bool CFX_XMLParser::DoSyntaxParse(CFX_XMLDocument* doc) {
     }
   }
 
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 void CFX_XMLParser::ProcessTextChar(wchar_t character) {

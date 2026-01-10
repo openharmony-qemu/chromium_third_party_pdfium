@@ -139,7 +139,7 @@ RetainPtr<CFX_CSSComputedStyle> CXFA_TextParser::CreateRootStyle(
       case XFA_AttributeValue::Radix:
         break;
       default:
-        NOTREACHED_NORETURN();
+        NOTREACHED();
     }
     pStyle->SetTextAlign(hAlign);
     CFX_CSSRect rtMarginWidth;
