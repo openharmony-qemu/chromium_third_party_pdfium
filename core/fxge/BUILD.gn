@@ -150,7 +150,9 @@ source_set("fxge") {
     }
   }
 
-  if (is_android) {
+  # arkweb_pdf DTS2025060325046: pdfium upgrade START
+  if (is_android || is_ohos) {
+  # arkweb_pdf DTS2025060325046: pdfium upgrade END
     sources += [
       "android/cfpf_skiadevicemodule.cpp",
       "android/cfpf_skiadevicemodule.h",
