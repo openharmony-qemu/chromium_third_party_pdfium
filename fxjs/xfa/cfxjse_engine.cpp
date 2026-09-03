@@ -147,6 +147,10 @@ CFXJSE_Engine::~CFXJSE_Engine() {
     const v8::Global<v8::Object>& binding = pair.second;
     FXJSE_ClearObjectBinding(v8::Local<v8::Object>::New(GetIsolate(), binding));
   }
+  for (const auto& pair : map_variable_to_context_) {
+    FXJSE_ClearObjectBinding(pair.second->GetGlobalObject());
+  }
+  FXJSE_ClearObjectBinding(js_context_->GetGlobalObject());
 }
 
 CFXJSE_Engine::EventParamScope::EventParamScope(CFXJSE_Engine* pEngine,
@@ -947,15 +951,20 @@ CXFA_Object* CFXJSE_Engine::ToXFAObject(v8::Local<v8::Value> obj) {
   if (!fxv8::IsObject(obj)) {
     return nullptr;
   }
-
-  CFXJSE_HostObject* pHostObj =
+  CFXJSE_HostObject* host_obj =
       FXJSE_RetrieveObjectBinding(obj.As<v8::Object>());
-  if (!pHostObj) {
+  if (!host_obj) {
     return nullptr;
   }
-
-  CJX_Object* pJSObject = pHostObj->AsCJXObject();
-  return pJSObject ? pJSObject->GetXFAObject() : nullptr;
+  CJX_Object* jx_obj = host_obj->AsCJXObject();
+  if (!jx_obj) {
+    return nullptr;
+  }
+  CXFA_Object* xfa_obj = jx_obj->GetXFAObject();
+  if (!xfa_obj || xfa_obj->GetDocument() != document_) {
+    return nullptr;
+  }
+  return xfa_obj;
 }
 
 v8::Local<v8::Object> CFXJSE_Engine::NewNormalXFAObject(CXFA_Object* obj) {
