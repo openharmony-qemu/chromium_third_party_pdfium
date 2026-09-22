@@ -35,6 +35,7 @@ Local Modifications:
 0046-func-ptr-mixup.patch: Prevent mixing up function pointer types.
 0047-opj_j2k_read_sod.patch: Fix out of bounds read.
 0051-opj_j2k_copy_default_double_free.patch: Fix a double free.
+0052-opj_j2k_copy_default_mcc_records.patch: Fix MCC records count.
 
 Note:
 
