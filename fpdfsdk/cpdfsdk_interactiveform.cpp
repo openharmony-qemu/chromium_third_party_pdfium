@@ -374,27 +374,6 @@ void CPDFSDK_InteractiveForm::UpdateField(CPDF_FormField* pFormField) {
   }
 }
 
-bool CPDFSDK_InteractiveForm::OnKeyStrokeCommit(CPDF_FormField* pFormField,
-                                                const WideString& csValue) {
-  CPDF_AAction aAction = pFormField->GetAdditionalAction();
-  if (!aAction.ActionExist(CPDF_AAction::kKeyStroke)) {
-    return true;
-  }
-
-  CPDF_Action action = aAction.GetAction(CPDF_AAction::kKeyStroke);
-  if (!action.HasDict()) {
-    return true;
-  }
-
-  CFFL_FieldAction fa;
-  fa.bModifier = false;
-  fa.bShift = false;
-  fa.sValue = csValue;
-  form_fill_env_->DoActionFieldJavaScript(action, CPDF_AAction::kKeyStroke,
-                                          pFormField, &fa);
-  return fa.bRC;
-}
-
 bool CPDFSDK_InteractiveForm::OnValidate(CPDF_FormField* pFormField,
                                          const WideString& csValue) {
   CPDF_AAction aAction = pFormField->GetAdditionalAction();
@@ -565,9 +544,6 @@ bool CPDFSDK_InteractiveForm::BeforeValueChange(CPDF_FormField* pField,
   if (!IsFormFieldTypeComboOrText(fieldType)) {
     return true;
   }
-  if (!OnKeyStrokeCommit(pField, csValue)) {
-    return false;
-  }
   return OnValidate(pField, csValue);
 }
 
@@ -590,9 +566,6 @@ bool CPDFSDK_InteractiveForm::BeforeSelectionChange(CPDF_FormField* pField,
                                                     const WideString& csValue) {
   if (pField->GetFieldType() != FormFieldType::kListBox) {
     return true;
-  }
-  if (!OnKeyStrokeCommit(pField, csValue)) {
-    return false;
   }
   return OnValidate(pField, csValue);
 }
