@@ -1,0 +1,19 @@
+diff a/core/fxge/cfx_face.cpp b/core/fxge/cfx_face.cpp	(rejected hunks)
+@@ -339,7 +339,7 @@ RetainPtr<CFX_Face> CFX_Face::New(FT_Library library,
+   return pdfium::WrapRetain(new CFX_Face(pRec, std::move(pDesc)));
+ }
+ 
+-#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
++#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_OHOS)
+ // static
+ RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
+                                    const FT_Open_Args* args,
+@@ -357,7 +357,7 @@ RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
+ }
+ #endif
+ 
+-#if BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
+                                                ByteStringView path,
+                                                int32_t face_index) {

@@ -1,0 +1,19 @@
+diff a/fpdfsdk/fpdf_view.cpp b/fpdfsdk/fpdf_view.cpp	(rejected hunks)
+@@ -486,7 +486,7 @@ FPDF_EXPORT FPDF_PAGE FPDF_CALLCONV FPDF_LoadPage(FPDF_DOCUMENT document,
+ #endif  // PDF_ENABLE_XFA
+ 
+   RetainPtr<CPDF_Dictionary> dict = doc->GetMutablePageDictionary(page_index);
+-  if (!dict) {
++  if (!CPDF_Page::IsValidPageDictLoose(dict)) {
+     return nullptr;
+   }
+ 
+@@ -1135,7 +1135,7 @@ FPDF_GetPageSizeByIndexF(FPDF_DOCUMENT document,
+ #endif  // PDF_ENABLE_XFA
+ 
+   RetainPtr<CPDF_Dictionary> dict = doc->GetMutablePageDictionary(page_index);
+-  if (!dict) {
++  if (!CPDF_Page::IsValidPageDictLoose(dict)) {
+     return false;
+   }
+ 
