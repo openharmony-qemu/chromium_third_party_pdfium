@@ -1,5 +1,7 @@
 diff a/fpdfsdk/fpdf_editpage.cpp b/fpdfsdk/fpdf_editpage.cpp	(rejected hunks)
-@@ -27,7 +27,6 @@
+@@ -25,11 +25,10 @@
+ #include "core/fpdfapi/page/cpdf_shadingobject.h"
+ #include "core/fpdfapi/page/cpdf_textobject.h"
  #include "core/fpdfapi/parser/cpdf_array.h"
  #include "core/fpdfapi/parser/cpdf_dictionary.h"
  #include "core/fpdfapi/parser/cpdf_document.h"
@@ -7,7 +9,11 @@ diff a/fpdfsdk/fpdf_editpage.cpp b/fpdfsdk/fpdf_editpage.cpp	(rejected hunks)
  #include "core/fpdfapi/parser/cpdf_number.h"
  #include "core/fpdfapi/parser/cpdf_string.h"
  #include "core/fpdfapi/render/cpdf_docrenderdata.h"
-@@ -67,19 +66,8 @@ static_assert(FPDF_PAGEOBJ_FORM ==
+ #include "core/fpdfdoc/cpdf_annot.h"
+ #include "core/fpdfdoc/cpdf_annotlist.h"
+@@ -65,23 +64,12 @@ static_assert(FPDF_PAGEOBJ_FORM ==
+               "FPDF_PAGEOBJ_SHADING/CPDF_PageObject::SHADING mismatch");
+ static_assert(FPDF_PAGEOBJ_FORM ==
                    static_cast<int>(CPDF_PageObject::Type::kForm),
                "FPDF_PAGEOBJ_FORM/CPDF_PageObject::FORM mismatch");
  
@@ -29,7 +35,11 @@ diff a/fpdfsdk/fpdf_editpage.cpp b/fpdfsdk/fpdf_editpage.cpp	(rejected hunks)
  }
  
  void CalcBoundingBox(CPDF_PageObject* pPageObj) {
-@@ -228,25 +216,25 @@ FPDF_EXPORT FPDF_PAGE FPDF_CALLCONV FPDFPage_New(FPDF_DOCUMENT document,
+   switch (pPageObj->GetType()) {
+     case CPDF_PageObject::Type::kText: {
+@@ -226,29 +214,29 @@ FPDF_EXPORT FPDF_PAGE FPDF_CALLCONV FPDFPage_New(FPDF_DOCUMENT document,
+   if (!doc) {
+     return nullptr;
    }
  
    page_index = std::clamp(page_index, 0, doc->GetPageCount());
@@ -64,3 +74,5 @@ diff a/fpdfsdk/fpdf_editpage.cpp b/fpdfsdk/fpdf_editpage.cpp	(rejected hunks)
    pPage->AddPageImageCache();
    pPage->ParseContent();
  
+   return FPDFPageFromIPDFPage(pPage.Leak());  // Caller takes ownership.
+ }

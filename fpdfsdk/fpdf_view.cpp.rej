@@ -1,5 +1,7 @@
 diff a/fpdfsdk/fpdf_view.cpp b/fpdfsdk/fpdf_view.cpp	(rejected hunks)
-@@ -486,7 +486,7 @@ FPDF_EXPORT FPDF_PAGE FPDF_CALLCONV FPDF_LoadPage(FPDF_DOCUMENT document,
+@@ -484,11 +484,11 @@ FPDF_EXPORT FPDF_PAGE FPDF_CALLCONV FPDF_LoadPage(FPDF_DOCUMENT document,
+     return FPDFPageFromIPDFPage(context->GetOrCreateXFAPage(page_index).Leak());
+   }
  #endif  // PDF_ENABLE_XFA
  
    RetainPtr<CPDF_Dictionary> dict = doc->GetMutablePageDictionary(page_index);
@@ -8,7 +10,11 @@ diff a/fpdfsdk/fpdf_view.cpp b/fpdfsdk/fpdf_view.cpp	(rejected hunks)
      return nullptr;
    }
  
-@@ -1135,7 +1135,7 @@ FPDF_GetPageSizeByIndexF(FPDF_DOCUMENT document,
+   auto pPage = pdfium::MakeRetain<CPDF_Page>(doc, std::move(dict));
+   pPage->AddPageImageCache();
+@@ -1133,11 +1133,11 @@ FPDF_GetPageSizeByIndexF(FPDF_DOCUMENT document,
+     return true;
+   }
  #endif  // PDF_ENABLE_XFA
  
    RetainPtr<CPDF_Dictionary> dict = doc->GetMutablePageDictionary(page_index);
@@ -17,3 +23,5 @@ diff a/fpdfsdk/fpdf_view.cpp b/fpdfsdk/fpdf_view.cpp	(rejected hunks)
      return false;
    }
  
+   auto page = pdfium::MakeRetain<CPDF_Page>(doc, std::move(dict));
+   page->AddPageImageCache();

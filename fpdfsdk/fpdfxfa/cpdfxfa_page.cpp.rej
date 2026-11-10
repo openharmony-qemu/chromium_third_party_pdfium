@@ -1,5 +1,7 @@
 diff a/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp b/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp	(rejected hunks)
-@@ -103,7 +103,9 @@ bool CPDFXFA_Page::LoadPDFPage() {
+@@ -101,11 +101,13 @@ bool CPDFXFA_Page::LoadPDFPage() {
+   if (!dict) {
+     return false;
    }
  
    if (!pdfpage_ || pdfpage_->GetDict() != dict) {
@@ -10,7 +12,11 @@ diff a/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp b/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp	(reje
    }
  
    return true;
-@@ -127,11 +129,16 @@ bool CPDFXFA_Page::LoadPage() {
+ }
+ 
+@@ -125,15 +127,20 @@ bool CPDFXFA_Page::LoadPage() {
+     case FormType::kXFAFull:
+       return !!GetXFAPageView();
    }
  }
  
@@ -30,7 +36,11 @@ diff a/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp b/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp	(reje
  }
  
  float CPDFXFA_Page::GetPageWidth() const {
-@@ -327,6 +334,7 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
+   CXFA_FFPageView* pPageView = GetXFAPageView();
+   if (!pdfpage_ && !pPageView) {
+@@ -325,10 +332,11 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
+   CXFA_FFPageView* xfaView = GetXFAPageView();
+   CXFA_FFPageWidgetIterator pWidgetIterator(
        xfaView, Mask<XFA_WidgetStatus>{XFA_WidgetStatus::kVisible,
                                        XFA_WidgetStatus::kViewable});
  
@@ -38,7 +48,11 @@ diff a/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp b/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp	(reje
    while (true) {
      CXFA_FFWidget* pWidget = pWidgetIterator.MoveToNext();
      if (!pWidget) {
-@@ -341,7 +349,7 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
+       break;
+     }
+@@ -339,11 +347,11 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
+     if (rtWidgetBox.IntersectWith(rectClip)) {
+       pWidget->RenderWidget(&gs, mtUser2Device, CXFA_FFWidget::kHighlight);
      }
    }
  
@@ -47,3 +61,5 @@ diff a/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp b/fpdfsdk/fpdfxfa/cpdfxfa_page.cpp	(reje
    if (!pXFAWidget) {
      return;
    }
+ 
+   CXFA_FFDocView* docView = xfaView->GetDocView();

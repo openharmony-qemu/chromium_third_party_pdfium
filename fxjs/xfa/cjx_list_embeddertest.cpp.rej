@@ -1,5 +1,6 @@
 diff a/fxjs/xfa/cjx_list_embeddertest.cpp b/fxjs/xfa/cjx_list_embeddertest.cpp	(rejected hunks)
-@@ -2,7 +2,10 @@
+@@ -1,10 +1,13 @@
+ // Copyright 2019 The PDFium Authors
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
@@ -10,7 +11,11 @@ diff a/fxjs/xfa/cjx_list_embeddertest.cpp b/fxjs/xfa/cjx_list_embeddertest.cpp	(
  #include "testing/xfa_js_embedder_test.h"
  
  class CJXListEmbedderTest : public XFAJSEmbedderTest {};
-@@ -13,3 +16,22 @@ TEST_F(CJXListEmbedderTest, Bug1263) {
+ 
+ // Should not crash.
+@@ -11,5 +14,24 @@ TEST_F(CJXListEmbedderTest, Bug1263) {
+ TEST_F(CJXListEmbedderTest, Bug1263) {
+   ASSERT_TRUE(OpenDocument("simple_xfa.pdf"));
  
    EXPECT_FALSE(Execute("nodes.insert($form,$)"));
  }

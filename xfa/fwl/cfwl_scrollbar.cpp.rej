@@ -1,5 +1,7 @@
 diff a/xfa/fwl/cfwl_scrollbar.cpp b/xfa/fwl/cfwl_scrollbar.cpp	(rejected hunks)
-@@ -34,6 +34,11 @@ CFWL_ScrollBar::CFWL_ScrollBar(CFWL_App* app,
+@@ -32,10 +32,15 @@ CFWL_ScrollBar::CFWL_ScrollBar(CFWL_App* app,
+                                CFWL_Widget* pOuter)
+     : CFWL_Widget(app, properties, pOuter) {}
  
  CFWL_ScrollBar::~CFWL_ScrollBar() = default;
  
@@ -11,3 +13,5 @@ diff a/xfa/fwl/cfwl_scrollbar.cpp b/xfa/fwl/cfwl_scrollbar.cpp	(rejected hunks)
  FWL_Type CFWL_ScrollBar::GetClassID() const {
    return FWL_Type::ScrollBar;
  }
+ 
+ void CFWL_ScrollBar::Update() {

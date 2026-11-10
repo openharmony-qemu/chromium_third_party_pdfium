@@ -1,5 +1,7 @@
 diff a/core/fpdfapi/parser/cpdf_document_unittest.cpp b/core/fpdfapi/parser/cpdf_document_unittest.cpp	(rejected hunks)
-@@ -299,11 +299,10 @@ TEST_F(DocumentTest, CountGreaterThanPageTree) {
+@@ -297,13 +297,12 @@ TEST_F(DocumentTest, CountGreaterThanPageTree) {
+ }
+ 
  TEST_F(DocumentTest, PagesWithoutKids) {
    // Set up a document with Pages dict without kids, and Count = 3
    auto doc = std::make_unique<CPDF_TestDocPagesWithoutKids>();
