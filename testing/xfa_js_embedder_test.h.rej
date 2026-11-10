@@ -1,0 +1,9 @@
+diff a/testing/xfa_js_embedder_test.h b/testing/xfa_js_embedder_test.h	(rejected hunks)
+@@ -35,6 +35,7 @@ class XFAJSEmbedderTest : public JSEmbedderTest {
+ 
+   bool Execute(ByteStringView input);
+   bool ExecuteSilenceFailure(ByteStringView input);
++  void ForceCppGarbageCollection();
+ 
+  private:
+   bool ExecuteHelper(ByteStringView input);
