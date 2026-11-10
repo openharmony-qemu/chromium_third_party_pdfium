@@ -1,5 +1,7 @@
 diff a/fxjs/cjs_field.cpp b/fxjs/cjs_field.cpp	(rejected hunks)
-@@ -1272,12 +1272,14 @@ CJS_Result CJS_Field::set_display(CJS_Runtime* pRuntime,
+@@ -1270,16 +1270,18 @@ CJS_Result CJS_Field::set_display(CJS_Runtime* pRuntime,
+ CJS_Result CJS_Field::set_display(CJS_Runtime* pRuntime,
+                                   v8::Local<v8::Value> vp) {
    if (!can_set_) {
      return CJS_Result::Failure(JSMessage::kReadOnlyError);
    }
@@ -18,3 +20,5 @@ diff a/fxjs/cjs_field.cpp b/fxjs/cjs_field.cpp	(rejected hunks)
    }
    return CJS_Result::Success();
  }
+ 
+ CJS_Result CJS_Field::get_doc(CJS_Runtime* pRuntime) {

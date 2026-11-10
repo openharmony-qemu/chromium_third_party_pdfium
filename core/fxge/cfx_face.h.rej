@@ -1,5 +1,7 @@
 diff a/core/fxge/cfx_face.h b/core/fxge/cfx_face.h	(rejected hunks)
-@@ -72,7 +72,7 @@ class CFX_Face final : public Retainable, public Observable {
+@@ -70,11 +70,11 @@ class CFX_Face final : public Retainable, public Observable {
+   static RetainPtr<CFX_Face> OpenFromStream(
+       FT_Library library,
        const RetainPtr<IFX_SeekableReadStream>& font_stream,
        FT_Long face_index);
  #endif
@@ -8,7 +10,11 @@ diff a/core/fxge/cfx_face.h b/core/fxge/cfx_face.h	(rejected hunks)
    static RetainPtr<CFX_Face> OpenFromFilePath(FT_Library library,
                                                ByteStringView path,
                                                int32_t face_index);
-@@ -171,7 +171,7 @@ private:
+ #endif
+   bool HasGlyphNames() const;
+@@ -169,11 +169,11 @@ private:
+   FXFT_FaceRec* GetRec() { return rec_.get(); }
+   const FXFT_FaceRec* GetRec() const { return rec_.get(); }
  
    void AdjustVariationParams(int glyph_index, int dest_width, int weight);
    std::optional<std::array<uint8_t, 2>> GetOs2Panose();
@@ -17,3 +23,5 @@ diff a/core/fxge/cfx_face.h b/core/fxge/cfx_face.h	(rejected hunks)
    static RetainPtr<CFX_Face> Open(FT_Library library,
                                    const FT_Open_Args* args,
                                    FT_Long face_index);
+ #endif
+ 

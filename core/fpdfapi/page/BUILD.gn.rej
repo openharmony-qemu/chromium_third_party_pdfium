@@ -1,5 +1,7 @@
 diff a/core/fpdfapi/page/BUILD.gn b/core/fpdfapi/page/BUILD.gn	(rejected hunks)
-@@ -145,6 +145,7 @@ pdfium_unittest_source_set("unittests") {
+@@ -143,10 +143,11 @@ pdfium_unittest_source_set("unittests") {
+ pdfium_unittest_source_set("unittests") {
+   sources = [
      "cpdf_colorspace_unittest.cpp",
      "cpdf_devicecs_unittest.cpp",
      "cpdf_function_unittest.cpp",
@@ -7,7 +9,11 @@ diff a/core/fpdfapi/page/BUILD.gn b/core/fpdfapi/page/BUILD.gn	(rejected hunks)
      "cpdf_pageimagecache_unittest.cpp",
      "cpdf_pageobjectholder_unittest.cpp",
      "cpdf_psengine_unittest.cpp",
-@@ -153,7 +154,10 @@ pdfium_unittest_source_set("unittests") {
+     "cpdf_streamcontentparser_unittest.cpp",
+     "cpdf_streamparser_unittest.cpp",
+@@ -151,10 +152,13 @@ pdfium_unittest_source_set("unittests") {
+     "cpdf_streamcontentparser_unittest.cpp",
+     "cpdf_streamparser_unittest.cpp",
    ]
    deps = [
      ":page",
@@ -18,3 +24,4 @@ diff a/core/fpdfapi/page/BUILD.gn b/core/fpdfapi/page/BUILD.gn	(rejected hunks)
      "../render",
    ]
    pdfium_root_dir = "../../../"
+ }

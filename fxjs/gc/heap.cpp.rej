@@ -1,5 +1,7 @@
 diff a/fxjs/gc/heap.cpp b/fxjs/gc/heap.cpp	(rejected hunks)
-@@ -41,6 +41,14 @@ class CFXGC_Platform final : public cppgc::Platform {
+@@ -39,10 +39,18 @@ class CFXGC_Platform final : public cppgc::Platform {
+     // v8::Isolate pointer the first time. For non-default platforms this will
+     // require getting the appropriate task runner.
      return g_platform->GetForegroundTaskRunner(g_isolate);
    }
  
@@ -14,3 +16,5 @@ diff a/fxjs/gc/heap.cpp b/fxjs/gc/heap.cpp	(rejected hunks)
    std::unique_ptr<cppgc::JobHandle> PostJob(
        cppgc::TaskPriority priority,
        std::unique_ptr<cppgc::JobTask> job_task) override {
+     return g_platform->PostJob(priority, std::move(job_task));
+   }

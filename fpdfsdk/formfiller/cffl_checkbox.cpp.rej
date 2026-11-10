@@ -1,5 +1,7 @@
 diff a/fpdfsdk/formfiller/cffl_checkbox.cpp b/fpdfsdk/formfiller/cffl_checkbox.cpp	(rejected hunks)
-@@ -51,15 +51,10 @@ bool CFFL_CheckBox::OnChar(CPDFSDK_Widget* pWidget,
+@@ -49,19 +49,14 @@ bool CFFL_CheckBox::OnChar(CPDFSDK_Widget* pWidget,
+     case pdfium::ascii::kReturn:
+     case pdfium::ascii::kSpace: {
        CPDFSDK_PageView* pPageView = pWidget->GetPageView();
        DCHECK(pPageView);
  
@@ -18,4 +20,6 @@ diff a/fpdfsdk/formfiller/cffl_checkbox.cpp b/fpdfsdk/formfiller/cffl_checkbox.c
 +      if (form_filler_->OnButtonUp(observed, pPageView, nFlags) || !observed) {
          return true;
        }
+ 
+       CFFL_FormField::OnChar(pWidget, nChar, nFlags);
  

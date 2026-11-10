@@ -1,5 +1,7 @@
 diff a/core/fpdfapi/page/cpdf_page.cpp b/core/fpdfapi/page/cpdf_page.cpp	(rejected hunks)
-@@ -15,6 +15,7 @@
+@@ -13,10 +13,11 @@
+ #include "core/fpdfapi/page/cpdf_contentparser.h"
+ #include "core/fpdfapi/page/cpdf_pageimagecache.h"
  #include "core/fpdfapi/page/cpdf_pageobject.h"
  #include "core/fpdfapi/parser/cpdf_array.h"
  #include "core/fpdfapi/parser/cpdf_dictionary.h"
@@ -7,7 +9,11 @@ diff a/core/fpdfapi/page/cpdf_page.cpp b/core/fpdfapi/page/cpdf_page.cpp	(reject
  #include "core/fpdfapi/parser/cpdf_object.h"
  #include "core/fxcrt/check.h"
  #include "core/fxcrt/check_op.h"
-@@ -25,6 +26,15 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
+ #include "core/fxcrt/containers/contains.h"
+ 
+@@ -23,10 +24,19 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
+ CPDF_Page::CPDF_Page(CPDF_Document* document,
+                      RetainPtr<CPDF_Dictionary> pPageDict)
      : CPDF_PageObjectHolder(document, std::move(pPageDict), nullptr, nullptr),
        page_size_(100, 100),
        pdf_document_(document) {
@@ -23,7 +29,11 @@ diff a/core/fpdfapi/page/cpdf_page.cpp b/core/fpdfapi/page/cpdf_page.cpp	(reject
    // Cannot initialize |resources_| and |page_resources_| via the
    // CPDF_PageObjectHolder ctor because GetPageAttr() requires
    // CPDF_PageObjectHolder to finish initializing first.
-@@ -40,6 +50,25 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
+   RetainPtr<CPDF_Object> pPageAttr =
+       GetMutablePageAttr(pdfium::page_object::kResources);
+@@ -38,10 +48,29 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
+   LoadTransparencyInfo();
+ }
  
  CPDF_Page::~CPDF_Page() = default;
  
@@ -49,3 +59,5 @@ diff a/core/fpdfapi/page/cpdf_page.cpp b/core/fpdfapi/page/cpdf_page.cpp	(reject
  CPDF_Page* CPDF_Page::AsPDFPage() {
    return this;
  }
+ 
+ CPDFXFA_Page* CPDF_Page::AsXFAPage() {

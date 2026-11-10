@@ -1,5 +1,7 @@
 diff a/core/fpdfdoc/cpdf_nametree.cpp b/core/fpdfdoc/cpdf_nametree.cpp	(rejected hunks)
-@@ -30,22 +30,24 @@ struct NodeToInsert {
+@@ -28,26 +28,28 @@ struct NodeToInsert {
+ struct NodeToInsert {
+   RetainPtr<CPDF_Array> names;
    int index = -1;
  };
  
@@ -37,7 +39,11 @@ diff a/core/fpdfdoc/cpdf_nametree.cpp b/core/fpdfdoc/cpdf_nametree.cpp	(rejected
  }
  
  // Get the limit arrays that leaf array |pFind| is under in the tree with root
-@@ -108,7 +110,8 @@ bool UpdateNodesAndLimitsUponDeletion(CPDF_Dictionary* pNode,
+ // |pNode|. |pLimits| will hold all the limit arrays from the leaf up to before
+ // the root. Return true if successful.
+@@ -106,11 +108,12 @@ bool UpdateNodesAndLimitsUponDeletion(CPDF_Dictionary* pNode,
+ 
+   RetainPtr<CPDF_Array> pLimits = pNode->GetMutableArrayFor("Limits");
    WideString csLeft;
    WideString csRight;
    if (pLimits) {
@@ -47,7 +53,11 @@ diff a/core/fpdfdoc/cpdf_nametree.cpp b/core/fpdfdoc/cpdf_nametree.cpp	(rejected
    }
  
    RetainPtr<const CPDF_Array> pNames = pNode->GetArrayFor("Names");
-@@ -242,13 +245,18 @@ RetainPtr<const CPDF_Object> SearchNameNodeByNameInternal(
+   if (pNames) {
+     if (pNames != pFind) {
+@@ -240,17 +243,22 @@ RetainPtr<const CPDF_Object> SearchNameNodeByNameInternal(
+   if (pLimits && IsArrayWithTraversedObject(pLimits.Get(), seen_obj_nums)) {
+     pLimits.Reset();
    }
  
    if (pLimits) {
@@ -69,3 +79,5 @@ diff a/core/fpdfdoc/cpdf_nametree.cpp b/core/fpdfdoc/cpdf_nametree.cpp	(rejected
        // If only trying to find the name node, and not where the name should be
        // added, skip this node.
        if (!node_to_insert) {
+         return nullptr;
+       }

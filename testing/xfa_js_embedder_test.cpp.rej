@@ -1,5 +1,7 @@
 diff a/testing/xfa_js_embedder_test.cpp b/testing/xfa_js_embedder_test.cpp	(rejected hunks)
-@@ -118,3 +118,9 @@ bool XFAJSEmbedderTest::ExecuteHelper(ByteStringView input) {
+@@ -116,5 +116,11 @@ bool XFAJSEmbedderTest::ExecuteHelper(ByteStringView input) {
+       CXFA_Script::Type::Formcalc, WideString::FromUTF8(input).AsStringView(),
+       GetXFADocument()->GetRoot());
    value_.Reset(isolate(), exec_result.value->GetValue(isolate()));
    return exec_result.status;
  }

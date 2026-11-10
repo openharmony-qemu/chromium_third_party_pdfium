@@ -1,5 +1,7 @@
 diff a/core/fpdfapi/parser/cpdf_document.cpp b/core/fpdfapi/parser/cpdf_document.cpp	(rejected hunks)
-@@ -269,6 +269,9 @@ RetainPtr<CPDF_Dictionary> CPDF_Document::TraversePDFPages(int iPage,
+@@ -267,10 +267,13 @@ RetainPtr<CPDF_Dictionary> CPDF_Document::TraversePDFPages(int iPage,
+   if (!pKidList) {
+     tree_traversal_.pop_back();
      if (*nPagesToGo != 1) {
        return nullptr;
      }
@@ -9,3 +11,5 @@ diff a/core/fpdfapi/parser/cpdf_document.cpp b/core/fpdfapi/parser/cpdf_document
      page_list_[iPage] = pPages->GetObjNum();
      return pPages;
    }
+   if (level >= kMaxPageLevel) {
+     tree_traversal_.pop_back();

@@ -1,5 +1,7 @@
 diff a/xfa/fwl/cfwl_caret.cpp b/xfa/fwl/cfwl_caret.cpp	(rejected hunks)
-@@ -32,6 +32,11 @@ CFWL_Caret::CFWL_Caret(CFWL_App* app,
+@@ -30,10 +30,15 @@ CFWL_Caret::CFWL_Caret(CFWL_App* app,
+   SetStates(kStateHighlight);
+ }
  
  CFWL_Caret::~CFWL_Caret() = default;
  
@@ -11,3 +13,5 @@ diff a/xfa/fwl/cfwl_caret.cpp b/xfa/fwl/cfwl_caret.cpp	(rejected hunks)
  FWL_Type CFWL_Caret::GetClassID() const {
    return FWL_Type::Caret;
  }
+ 
+ void CFWL_Caret::Update() {}
