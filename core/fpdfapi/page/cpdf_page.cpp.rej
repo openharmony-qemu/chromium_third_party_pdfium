@@ -1,36 +1,4 @@
 diff a/core/fpdfapi/page/cpdf_page.cpp b/core/fpdfapi/page/cpdf_page.cpp	(rejected hunks)
-@@ -13,10 +13,11 @@
- #include "core/fpdfapi/page/cpdf_contentparser.h"
- #include "core/fpdfapi/page/cpdf_pageimagecache.h"
- #include "core/fpdfapi/page/cpdf_pageobject.h"
- #include "core/fpdfapi/parser/cpdf_array.h"
- #include "core/fpdfapi/parser/cpdf_dictionary.h"
-+#include "core/fpdfapi/parser/cpdf_name.h"
- #include "core/fpdfapi/parser/cpdf_object.h"
- #include "core/fxcrt/check.h"
- #include "core/fxcrt/check_op.h"
- #include "core/fxcrt/containers/contains.h"
- 
-@@ -23,10 +24,19 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
- CPDF_Page::CPDF_Page(CPDF_Document* document,
-                      RetainPtr<CPDF_Dictionary> pPageDict)
-     : CPDF_PageObjectHolder(document, std::move(pPageDict), nullptr, nullptr),
-       page_size_(100, 100),
-       pdf_document_(document) {
-+  // Retrieves `pPageDict` and validates it.
-+  RetainPtr<CPDF_Dictionary> mutable_page_dict = GetMutableDict();
-+  CHECK(IsValidPageDictLoose(mutable_page_dict));
-+  // Then fix it up if /Type is missing.
-+  if (!mutable_page_dict->KeyExist(pdfium::page_object::kType)) {
-+    mutable_page_dict->SetNewFor<CPDF_Name>(pdfium::page_object::kType, "Page");
-+    CHECK(IsValidPageDict(mutable_page_dict));
-+  }
-+
-   // Cannot initialize |resources_| and |page_resources_| via the
-   // CPDF_PageObjectHolder ctor because GetPageAttr() requires
-   // CPDF_PageObjectHolder to finish initializing first.
-   RetainPtr<CPDF_Object> pPageAttr =
-       GetMutablePageAttr(pdfium::page_object::kResources);
 @@ -38,10 +48,29 @@ CPDF_Page::CPDF_Page(CPDF_Document* document,
    LoadTransparencyInfo();
  }

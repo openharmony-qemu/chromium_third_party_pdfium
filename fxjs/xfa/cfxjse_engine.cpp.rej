@@ -1,21 +1,4 @@
 diff a/fxjs/xfa/cfxjse_engine.cpp b/fxjs/xfa/cfxjse_engine.cpp	(rejected hunks)
-@@ -925,15 +925,11 @@ v8::Local<v8::Object> CFXJSE_Engine::GetOrCreateJSBindingFromMap(
-   auto iter = map_object_to_object_.find(pCJXObject);
-   if (iter != map_object_to_object_.end()) {
-     return v8::Local<v8::Object>::New(GetIsolate(), iter->second);
-   }
- 
--  v8::Local<v8::Object> binding = pCJXObject->NewBoundV8Object(
--      GetIsolate(), js_class_->GetTemplate(GetIsolate()));
--
--  map_object_to_object_[pCJXObject].Reset(GetIsolate(), binding);
--  return binding;
-+  return NewNormalXFAObject(pObject);
- }
- 
- void CFXJSE_Engine::SetNodesOfRunScript(
-     std::vector<cppgc::Persistent<CXFA_Node>>* pArray) {
-   script_node_array_ = pArray;
 @@ -962,9 +958,11 @@ CXFA_Object* CFXJSE_Engine::ToXFAObject(v8::Local<v8::Value> obj) {
    return pJSObject ? pJSObject->GetXFAObject() : nullptr;
  }
