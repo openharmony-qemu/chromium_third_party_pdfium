@@ -134,6 +134,9 @@ void CFX_FolderFontInfo::ScanPath(CFX_FontMapper* mapper,
                                   const ByteString& path) {
   std::unique_ptr<FX_Folder> handle = FX_Folder::OpenFolder(path);
   if (!handle) {
+#if BUILDFLAG(IS_OHOS)
+    OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "PDF", "Load font failed, path: %{public}s.\n", path.c_str());
+#endif
     return;
   }
 
